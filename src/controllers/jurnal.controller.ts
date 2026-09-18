@@ -1,55 +1,41 @@
 import { Request, Response } from "express";
 import { dataJurnal, dataPeserta } from "../data/dummy";
 import { Jurnal, JurnalBody, JurnalQuery } from "../types";
+import { asyncHandler } from "../utils/asyncHandler";
+import { NotFoundError, ValidationError } from "../utils/AppError";
 
 // GET /api/jurnal
-export const getSemuaJurnal = (req: Request<{}, {}, {}, JurnalQuery>, res: Response): void => {
+export const getSemuaJurnal = asyncHandler(async (req: Request<{}, {}, {}, JurnalQuery>, res: Response) => {
     const { peserta, status } = req.query;
     let hasil = dataJurnal;
 
-    if (peserta) {
-        hasil = hasil.filter(j => j.pesertaId === Number(peserta));
-    }
+    if (peserta) hasil = hasil.filter(j => j.pesertaId === Number(peserta));
+    if (status) hasil = hasil.filter(j => j.status === status);
 
-    if (status) {
-        hasil = hasil.filter(j => j.status === status);
-    }
-
-    res.json({ total: hasil.length, data: hasil });
-};
+    res.json({ sukses: true, total: hasil.length, data: hasil });
+});
 
 // GET /api/jurnal/:id
-export const getJurnalById = (req: Request, res: Response): void => {
+export const getJurnalById = asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const jurnal = dataJurnal.find(j => j.id === id);
 
-    if (!jurnal) {
-        res.status(404).json({ error: `Jurnal dengan id ${id} tidak ditemukan` });
-        return;
-    }
+    if (!jurnal) throw new NotFoundError("Jurnal");
 
-    res.json(jurnal);
-};
+    res.json({ sukses: true, data: jurnal });
+});
 
 // POST /api/jurnal
-export const buatJurnal = (req: Request<{}, {}, JurnalBody>, res: Response): void => {
+export const buatJurnal = asyncHandler(async (req: Request<{}, {}, JurnalBody>, res: Response) => {
     const { pesertaId, kegiatan, status } = req.body;
 
-    if (!pesertaId || !kegiatan) {
-        res.status(400).json({ error: "PesertaId dan kegiatan wajib diisi" });
-        return;
-    }
-
-    if (kegiatan.trim().length < 10) {
-        res.status(400).json({ error: "Kegiatan minimal 10 karakter" });
-        return;
-    }
+    const errors: string[] = [];
+    if (!pesertaId) errors.push("PesertaId wajib diisi");
+    if (!kegiatan || kegiatan.trim().length < 10) errors.push("Kegiatan minimal 10 karakter");
+    if (errors.length > 0) throw new ValidationError(errors);
 
     const peserta = dataPeserta.find(p => p.id === pesertaId);
-    if (!peserta) {
-        res.status(400).json({ error: `Peserta dengan id ${pesertaId} tidak ditemukan` });
-        return;
-    }
+    if (!peserta) throw new NotFoundError("Peserta");
 
     const idBaru = dataJurnal.length > 0
         ? Math.max(...dataJurnal.map(j => j.id)) + 1
@@ -64,30 +50,23 @@ export const buatJurnal = (req: Request<{}, {}, JurnalBody>, res: Response): voi
     };
 
     dataJurnal.push(jurnalBaru);
-    res.status(201).json(jurnalBaru);
-};
+    res.status(201).json({ sukses: true, data: jurnalBaru });
+});
 
 // PUT /api/jurnal/:id
-export const updateJurnal = (req: Request<{ id: string }, {}, JurnalBody>, res: Response): void => {
+export const updateJurnal = asyncHandler(async (req: Request<{ id: string }, {}, JurnalBody>, res: Response) => {
     const id = Number(req.params.id);
     const index = dataJurnal.findIndex(j => j.id === id);
 
-    if (index === -1) {
-        res.status(404).json({ error: `Jurnal dengan id ${id} tidak ditemukan` });
-        return;
-    }
+    if (index === -1) throw new NotFoundError("Jurnal");
 
     const jurnalLama = dataJurnal[index];
-    if (!jurnalLama) {
-        res.status(404).json({ error: `Jurnal dengan id ${id} tidak ditemukan` });
-        return;
-    }
+    if (!jurnalLama) throw new NotFoundError("Jurnal");
 
     const { kegiatan, status } = req.body;
 
     if (kegiatan && kegiatan.trim().length < 10) {
-        res.status(400).json({ error: "Kegiatan minimal 10 karakter" });
-        return;
+        throw new ValidationError(["Kegiatan minimal 10 karakter"]);
     }
 
     dataJurnal[index] = {
@@ -96,19 +75,16 @@ export const updateJurnal = (req: Request<{ id: string }, {}, JurnalBody>, res: 
         status: status ?? jurnalLama.status
     };
 
-    res.json(dataJurnal[index]);
-};
+    res.json({ sukses: true, data: dataJurnal[index] });
+});
 
 // DELETE /api/jurnal/:id
-export const hapusJurnal = (req: Request, res: Response): void => {
+export const hapusJurnal = asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const index = dataJurnal.findIndex(j => j.id === id);
 
-    if (index === -1) {
-        res.status(404).json({ error: `Jurnal dengan id ${id} tidak ditemukan` });
-        return;
-    }
+    if (index === -1) throw new NotFoundError("Jurnal");
 
     dataJurnal.splice(index, 1);
     res.status(204).send();
-};
+});
