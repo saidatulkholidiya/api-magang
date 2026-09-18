@@ -9,6 +9,7 @@ router.get("/", jurnalController.getSemuaJurnal);
 router.get("/:id", jurnalController.getJurnalById);
 router.post("/", validasiJurnal, jurnalController.buatJurnal);
 router.put("/:id", validasiJurnal, jurnalController.updateJurnal);
+router.patch("/:id/review", jurnalController.reviewJurnal);
 router.delete("/:id", cekApiKey, jurnalController.hapusJurnal);
 
 export default router;
