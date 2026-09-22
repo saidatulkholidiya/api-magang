@@ -9,7 +9,9 @@
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
     "target": "es2022",
-    "types": [],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    //"types": [],
     // For nodejs:
     // "lib": ["es2022"],
     // "types": ["node"],
@@ -17,12 +19,12 @@
 
     // Other Outputs
     "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
+    //"declaration": true,
+    //"declarationMap": true,
 
     // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    //"noUncheckedIndexedAccess": true,
+   // "exactOptionalPropertyTypes": true,
 
     // Style Options
     // "noImplicitReturns": true,
