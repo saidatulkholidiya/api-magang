@@ -2,8 +2,12 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     Column,
-    CreateDateColumn
+    CreateDateColumn,
+    ManyToOne,
+    JoinColumn
 } from "typeorm";
+import { Peserta } from "./Peserta.entity";
+import { Mentor } from "./Mentor.entity";
 
 export type StatusReview = "belum" | "sudah";
 
@@ -11,9 +15,6 @@ export type StatusReview = "belum" | "sudah";
 export class JurnalHarian {
     @PrimaryGeneratedColumn()
     id!: number;
-
-    @Column({ type: "int" })
-    pesertaId!: number;
 
     @Column({ type: "text" })
     kegiatan!: string;
@@ -26,6 +27,22 @@ export class JurnalHarian {
 
     @Column({ type: "enum", enum: ["belum", "sudah"], default: "belum" })
     statusReview!: StatusReview;
+
+    // Relasi ke Peserta
+    @ManyToOne(() => Peserta, (peserta) => peserta.jurnalList)
+    @JoinColumn({ name: "peserta_id" })
+    peserta!: Peserta;
+
+    @Column({ name: "peserta_id", type: "int" })
+    pesertaId!: number;
+
+    // Relasi ke Mentor (SOAL 4)
+    @ManyToOne(() => Mentor, (mentor) => mentor.jurnalList, { nullable: true })
+    @JoinColumn({ name: "reviewer_id" })
+    reviewer?: Mentor;
+
+    @Column({ name: "reviewer_id", type: "int", nullable: true })
+    reviewerId?: number;
 
     @CreateDateColumn()
     createdAt!: Date;

@@ -3,8 +3,13 @@ import {
     PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
-    UpdateDateColumn
+    UpdateDateColumn,
+    OneToMany,
+    ManyToMany,
+    JoinTable
 } from "typeorm";
+import { JurnalHarian } from "./JurnalHarian.entity";
+import { Skill } from "./Skill.entity";
 
 export type StatusPeserta = "aktif" | "lulus" | "berhenti";
 
@@ -31,6 +36,14 @@ export class Peserta {
     @Column({ type: "varchar", nullable: true })
     telepon?: string;
 
+    // ← TAMBAHIN INI (One-to-Many)
+    @OneToMany(() => JurnalHarian, (jurnal) => jurnal.peserta)
+    jurnalList!: JurnalHarian[];
+
+    // ← TAMBAHIN INI (Many-to-Many)
+    @ManyToMany(() => Skill, (skill) => skill.peserta)
+    @JoinTable({ name: "peserta_skill" })
+    skills!: Skill[];
     @CreateDateColumn()
     createdAt!: Date;
 

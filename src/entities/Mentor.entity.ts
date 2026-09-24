@@ -2,8 +2,10 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     Column,
-    CreateDateColumn
+    CreateDateColumn,
+    OneToMany
 } from "typeorm";
+import { JurnalHarian } from "./JurnalHarian.entity";
 
 @Entity("mentor")
 export class Mentor {
@@ -19,7 +21,9 @@ export class Mentor {
     @Column({ type: "jsonb", nullable: true })
     keahlian?: string[];
 
+    @OneToMany(() => JurnalHarian, (jurnal) => jurnal.reviewer)
+    jurnalList!: JurnalHarian[];
+
     @CreateDateColumn()
     createdAt!: Date;
-
 }
