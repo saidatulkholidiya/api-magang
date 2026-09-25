@@ -1,57 +1,69 @@
-import { pesertaRepository } from "../repositories";
-import { NotFoundError, ValidationError } from "../utils/AppError";
-import { Peserta, PesertaBody, PesertaQuery } from "../types";
+import { AppDataSource } from "../config/database.config";
+import { Peserta } from "../entities/Peserta.entity";
+import { NotFoundError, ConflictError } from "../utils/AppError";
+
+const repo = AppDataSource.getRepository(Peserta);
 
 export const pesertaService = {
-    ambilSemua(query: PesertaQuery): Peserta[] {
-        let hasil = pesertaRepository.findAll();
+    async ambilSemua(sekolah?: string, fase?: string, limit?: string): Promise<Peserta[]> {
+        const qb = repo.createQueryBuilder("peserta")
+            .leftJoinAndSelect("peserta.jurnalList", "jurnal")
+            .leftJoinAndSelect("peserta.skills", "skill");
 
-        if (query.sekolah) {
-            hasil = hasil.filter(p =>
-                p.sekolah.toLowerCase().includes(String(query.sekolah).toLowerCase())
-            );
+        if (sekolah) {
+            qb.andWhere("peserta.sekolah ILIKE :sekolah", { sekolah: `%${sekolah}%` });
         }
 
-        if (query.fase) {
-            hasil = hasil.filter(p => p.fase === Number(query.fase));
+        if (fase) {
+            qb.andWhere("peserta.fase = :fase", { fase: Number(fase) });
         }
 
-        if (query.limit) {
-            hasil = hasil.slice(0, Number(query.limit));
+        qb.orderBy("peserta.id", "ASC");
+
+        if (limit) {
+            qb.take(Number(limit));
         }
 
-        return hasil;
+        return qb.getMany();
     },
 
-    ambilById(id: number): Peserta {
-        const peserta = pesertaRepository.findById(id);
+    async ambilById(id: number): Promise<Peserta> {
+        const peserta = await repo.findOne({
+            where: { id },
+            relations: { jurnalList: true, skills: true },
+        });
+
         if (!peserta) throw new NotFoundError("Peserta");
         return peserta;
     },
 
-    buat(data: PesertaBody): Peserta {
-        const errors: string[] = [];
-        if (!data.nama || data.nama.trim().length < 3) errors.push("Nama minimal 3 karakter");
-        if (!data.sekolah) errors.push("Sekolah wajib diisi");
-        if (errors.length > 0) throw new ValidationError(errors);
+    async buat(data: { nama: string; sekolah: string; email: string; fase?: number; telepon?: string }): Promise<Peserta> {
+        const emailSudahAda = await repo.findOneBy({ email: data.email });
+        if (emailSudahAda) throw new ConflictError("Email sudah terdaftar");
 
-        return pesertaRepository.create({
-            id: pesertaRepository.nextId(),
+        const baru = repo.create({
             nama: data.nama,
             sekolah: data.sekolah,
-            fase: data.fase || 1
+            email: data.email,
+            fase: data.fase ?? 1,
+            telepon: data.telepon,
         });
+
+        return repo.save(baru);
     },
 
-    update(id: number, data: PesertaBody): Peserta {
-        pesertaRepository.findById(id) || (() => { throw new NotFoundError("Peserta"); })();
-        const hasil = pesertaRepository.update(id, data);
-        if (!hasil) throw new NotFoundError("Peserta");
-        return hasil;
+    async update(id: number, data: Partial<Peserta>): Promise<Peserta> {
+        const peserta = await repo.findOneBy({ id });
+        if (!peserta) throw new NotFoundError("Peserta");
+
+        repo.merge(peserta, data);
+        return repo.save(peserta);
     },
 
-    hapus(id: number): void {
-        const berhasil = pesertaRepository.delete(id);
-        if (!berhasil) throw new NotFoundError("Peserta");
-    }
+    async hapus(id: number): Promise<void> {
+        const peserta = await repo.findOneBy({ id });
+        if (!peserta) throw new NotFoundError("Peserta");
+
+        await repo.remove(peserta);
+    },
 };

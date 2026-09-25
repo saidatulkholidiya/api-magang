@@ -30,3 +30,18 @@ Kenapa perlu?
 - Jika kita menjalankan `npm run migration:revert`, TypeORM revert migration terakhir yang tercatat di tabel ini.
 
 Analoginya: seperti buku absen. Tiap migration yang sudah dijalankan dicatat di sini, biar tidak dijalankan dua kali.
+
+## Setup Database dari Nol
+
+### 1. Install PostgreSQL 16
+
+Download dari [postgresql.org/download/windows](https://www.postgresql.org/download/windows/).
+
+Catat password `postgres` yang dibuat saat instalasi.
+
+### 2. Buat Database
+
+```bash
+psql -U postgres
+CREATE DATABASE magang_db;
+\q

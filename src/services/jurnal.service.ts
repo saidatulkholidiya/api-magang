@@ -1,72 +1,85 @@
-import { jurnalRepository, pesertaRepository } from "../repositories";
-import { NotFoundError, ValidationError } from "../utils/AppError";
-import { Jurnal, JurnalBody, JurnalQuery } from "../types";
+import { AppDataSource } from "../config/database.config";
+import { JurnalHarian } from "../entities/JurnalHarian.entity";
+import { Peserta } from "../entities/Peserta.entity";
+import { NotFoundError } from "../utils/AppError";
+
+const repo = AppDataSource.getRepository(JurnalHarian);
+const pesertaRepo = AppDataSource.getRepository(Peserta);
 
 export const jurnalService = {
-    ambilSemua(query: JurnalQuery): Jurnal[] {
-        let hasil = jurnalRepository.findAll();
+    async ambilSemua(pesertaId?: string, status?: string): Promise<JurnalHarian[]> {
+        const qb = repo.createQueryBuilder("jurnal")
+            .leftJoinAndSelect("jurnal.peserta", "peserta")
+            .leftJoinAndSelect("jurnal.reviewer", "reviewer");
 
-        if (query.peserta) {
-            hasil = hasil.filter(j => j.pesertaId === Number(query.peserta));
+        if (pesertaId) {
+            qb.andWhere("jurnal.pesertaId = :pesertaId", { pesertaId: Number(pesertaId) });
         }
 
-        if (query.status) {
-            hasil = hasil.filter(j => j.status === query.status);
+        if (status) {
+            qb.andWhere("jurnal.statusReview = :status", { status });
         }
 
-        return hasil;
+        qb.orderBy("jurnal.id", "ASC");
+
+        return qb.getMany();
     },
 
-    ambilById(id: number): Jurnal {
-        const jurnal = jurnalRepository.findById(id);
+    async ambilById(id: number): Promise<JurnalHarian> {
+        const jurnal = await repo.findOne({
+            where: { id },
+            relations: { peserta: true, reviewer: true },
+        });
+
         if (!jurnal) throw new NotFoundError("Jurnal");
         return jurnal;
     },
 
-    ambilByPeserta(pesertaId: number): Jurnal[] {
-        pesertaRepository.findById(pesertaId) || (() => { throw new NotFoundError("Peserta"); })();
-        return jurnalRepository.findByPesertaId(pesertaId);
-    },
+    async ambilByPeserta(pesertaId: number): Promise<JurnalHarian[]> {
+        const peserta = await pesertaRepo.findOneBy({ id: pesertaId });
+        if (!peserta) throw new NotFoundError("Peserta");
 
-    buat(data: JurnalBody): Jurnal {
-        const errors: string[] = [];
-        if (!data.pesertaId) errors.push("PesertaId wajib diisi");
-        if (!data.kegiatan || data.kegiatan.trim().length < 10) errors.push("Kegiatan minimal 10 karakter");
-        if (errors.length > 0) throw new ValidationError(errors);
-
-        if (!pesertaRepository.findById(data.pesertaId)) {
-            throw new NotFoundError("Peserta");
-        }
-
-        return jurnalRepository.create({
-            id: jurnalRepository.nextId(),
-            pesertaId: data.pesertaId,
-            kegiatan: data.kegiatan,
-            status: data.status || "belum",
-            tanggal: new Date().toISOString().slice(0, 10)
+        return repo.find({
+            where: { pesertaId },
+            relations: { reviewer: true },
         });
     },
 
-    update(id: number, data: JurnalBody): Jurnal {
-        jurnalRepository.findById(id) || (() => { throw new NotFoundError("Jurnal"); })();
+    async buat(data: { pesertaId: number; kegiatan: string; hambatan?: string; linkCommit?: string }): Promise<JurnalHarian> {
+        const peserta = await pesertaRepo.findOneBy({ id: data.pesertaId });
+        if (!peserta) throw new NotFoundError("Peserta");
 
-        if (data.kegiatan && data.kegiatan.trim().length < 10) {
-            throw new ValidationError(["Kegiatan minimal 10 karakter"]);
-        }
+        const baru = repo.create({
+            pesertaId: data.pesertaId,
+            kegiatan: data.kegiatan,
+            hambatan: data.hambatan,
+            linkCommit: data.linkCommit,
+            statusReview: "belum",
+        });
 
-        const hasil = jurnalRepository.update(id, data);
-        if (!hasil) throw new NotFoundError("Jurnal");
-        return hasil;
+        return repo.save(baru);
     },
 
-    review(id: number, status: "selesai" | "belum"): Jurnal {
-        const hasil = jurnalRepository.update(id, { status });
-        if (!hasil) throw new NotFoundError("Jurnal");
-        return hasil;
+    async update(id: number, data: Partial<JurnalHarian>): Promise<JurnalHarian> {
+        const jurnal = await repo.findOneBy({ id });
+        if (!jurnal) throw new NotFoundError("Jurnal");
+
+        repo.merge(jurnal, data);
+        return repo.save(jurnal);
     },
 
-    hapus(id: number): void {
-        const berhasil = jurnalRepository.delete(id);
-        if (!berhasil) throw new NotFoundError("Jurnal");
-    }
+    async review(id: number, status: "belum" | "sudah"): Promise<JurnalHarian> {
+        const jurnal = await repo.findOneBy({ id });
+        if (!jurnal) throw new NotFoundError("Jurnal");
+
+        jurnal.statusReview = status;
+        return repo.save(jurnal);
+    },
+
+    async hapus(id: number): Promise<void> {
+        const jurnal = await repo.findOneBy({ id });
+        if (!jurnal) throw new NotFoundError("Jurnal");
+
+        await repo.remove(jurnal);
+    },
 };
