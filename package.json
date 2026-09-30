@@ -3,20 +3,21 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-  "dev": "nodemon",
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "typeorm": "tsx ./node_modules/typeorm/cli.js",
-  "migration:generate": "npm run typeorm -- migration:generate -d src/config/database.config.ts",
-  "migration:create": "npm run typeorm -- migration:create",
-  "migration:run": "npm run typeorm -- migration:run -d src/config/database.config.ts",
-  "migration:revert": "npm run typeorm -- migration:revert -d src/config/database.config.ts"
-},
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typeorm": "tsx ./node_modules/typeorm/cli.js",
+    "migration:generate": "npm run typeorm -- migration:generate -d src/config/database.config.ts",
+    "migration:create": "npm run typeorm -- migration:create",
+    "migration:run": "npm run typeorm -- migration:run -d src/config/database.config.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d src/config/database.config.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.23.0",
@@ -24,6 +25,7 @@
     "typeorm": "^1.1.1"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.5.1",
     "@types/pg": "^8.23.1",

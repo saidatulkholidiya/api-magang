@@ -36,14 +36,19 @@ export class Peserta {
     @Column({ type: "varchar", nullable: true })
     telepon?: string;
 
-    // ← TAMBAHIN INI (One-to-Many)
+    @Column({ type: "varchar", default: "" })
+    password!: string;
+
+    @Column({ type: "varchar", default: "peserta" })
+    role!: "peserta" | "mentor";
+
     @OneToMany(() => JurnalHarian, (jurnal) => jurnal.peserta)
     jurnalList!: JurnalHarian[];
 
-    // ← TAMBAHIN INI (Many-to-Many)
     @ManyToMany(() => Skill, (skill) => skill.peserta)
     @JoinTable({ name: "peserta_skill" })
     skills!: Skill[];
+
     @CreateDateColumn()
     createdAt!: Date;
 
