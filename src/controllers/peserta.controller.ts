@@ -4,6 +4,12 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { sukses, suksesDenganTotal, dibuat } from "../utils/response";
 import { PesertaBody, PesertaQuery } from "../types";
 
+export const getProfilSaya = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const data = await pesertaService.ambilById(userId);
+    sukses(res, data);
+});
+
 export const getSemuaPeserta = asyncHandler(async (req: Request<{}, {}, {}, PesertaQuery>, res: Response) => {
     const { sekolah, fase, limit } = req.query;
     const data = await pesertaService.ambilSemua(sekolah, fase, limit);

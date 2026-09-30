@@ -4,6 +4,12 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { sukses, suksesDenganTotal, dibuat } from "../utils/response";
 import { JurnalBody, JurnalQuery } from "../types";
 
+export const getJurnalSaya = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const data = await jurnalService.ambilByPeserta(userId);
+    suksesDenganTotal(res, data, "Jurnal milik saya");
+});
+
 export const getSemuaJurnal = asyncHandler(async (req: Request<{}, {}, {}, JurnalQuery>, res: Response) => {
     const { peserta, status } = req.query;
     const data = await jurnalService.ambilSemua(peserta, status);
