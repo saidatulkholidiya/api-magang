@@ -27,7 +27,9 @@ export const buatJurnal = asyncHandler(async (req: Request<{}, {}, JurnalBody>, 
 });
 
 export const updateJurnal = asyncHandler(async (req: Request<{ id: string }, {}, JurnalBody>, res: Response) => {
-    const data = await jurnalService.update(Number(req.params.id), req.body);
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
+    const data = await jurnalService.update(Number(req.params.id), req.body, userId, userRole);
     sukses(res, data, "Data berhasil diupdate");
 });
 

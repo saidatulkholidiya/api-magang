@@ -1,7 +1,7 @@
 import { AppDataSource } from "../config/database.config";
 import { JurnalHarian } from "../entities/JurnalHarian.entity";
 import { Peserta } from "../entities/Peserta.entity";
-import { NotFoundError } from "../utils/AppError";
+import { NotFoundError, UnauthorizedError } from "../utils/AppError";
 
 const repo = AppDataSource.getRepository(JurnalHarian);
 const pesertaRepo = AppDataSource.getRepository(Peserta);
@@ -60,12 +60,17 @@ export const jurnalService = {
         return repo.save(baru);
     },
 
-    async update(id: number, data: Partial<JurnalHarian>): Promise<JurnalHarian> {
-        const jurnal = await repo.findOneBy({ id });
-        if (!jurnal) throw new NotFoundError("Jurnal");
+    async update(id: number, data: Partial<JurnalHarian>, userId: number, userRole: string): Promise<JurnalHarian> {
+    const jurnal = await repo.findOneBy({ id });
+    if (!jurnal) throw new NotFoundError("Jurnal");
 
-        repo.merge(jurnal, data);
-        return repo.save(jurnal);
+    // Kalo BUKAN mentor, cek ownership
+    if (userRole !== "mentor" && jurnal.pesertaId !== userId) {
+        throw new UnauthorizedError("Kamu tidak berhak mengubah jurnal ini");
+    }
+
+    repo.merge(jurnal, data);
+    return repo.save(jurnal);
     },
 
     async review(id: number, status: "belum" | "sudah"): Promise<JurnalHarian> {
