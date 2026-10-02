@@ -1,47 +1,96 @@
-# Kenapa Kemampuan Revert Penting di Kerja Tim?
-
-Revert adalah tombol "undo" pada migration. Jika ada migration yang keliru atau menimbulkan masalah, kita dapat mengembalikan database ke kondisi sebelumnya dengan cepat.
-
-Di kerja tim, kemampuan ini sangat penting, karena:
-
-1. **Jika ada bug**, kita dapat langsung mengembalikan database tanpa harus memperbaikinya secara manual satu per satu.
-2. **Jika terjadi kesalahan migration**, kita tidak perlu panik — cukup lakukan revert, kemudian perbaiki.
-3. **Jika ingin mengulang dari awal**, kita dapat me-revert semua migration, lalu menjalankannya kembali.
-4. **Jika ada deployment yang gagal**, kita dapat segera kembali ke versi sebelumnya.
-
-Bayangkan jika fitur revert tidak ada. Setiap kali terjadi kesalahan migration, kita harus memperbaikinya secara manual satu per satu di database. Selain merepotkan, risikonya juga besar — bisa saja data terhapus tanpa sengaja, atau database menjadi tidak konsisten.
-
-Dengan adanya revert, kita memiliki jalan keluar yang aman. Jadi, jika ada masalah, kita cukup mengembalikannya, lalu mencoba lagi.
-
----
-
-## Fungsi Tabel `migrations`
-
-Tabel `migrations` adalah catatan riwayat. Isinya daftar migration yang sudah pernah dijalankan di database ini.
-
-Kolomnya:
-- `id`: nomor urut
-- `timestamp`: waktu migration dibuat
-- `name`: nama file migration
-
-Kenapa perlu?
-- Biar TypeORM tahu migration mana yang sudah dijalankan, mana yang belum.
-- Jika kita menjalankan `npm run migration:run`, TypeORM cek tabel ini dulu — hanya menjalankan migration yang belum ada di sini.
-- Jika kita menjalankan `npm run migration:revert`, TypeORM revert migration terakhir yang tercatat di tabel ini.
-
-Analoginya: seperti buku absen. Tiap migration yang sudah dijalankan dicatat di sini, biar tidak dijalankan dua kali.
+# API Magang Batch 4
 
 ## Setup Database dari Nol
 
-### 1. Install PostgreSQL 16
+1. Install PostgreSQL 16.
+2. Buat database: CREATE DATABASE magang_db;
+3. Jalanin migration: npm run migration:run
+4. Jalanin server: npm run dev
 
-Download dari [postgresql.org/download/windows](https://www.postgresql.org/download/windows/).
+## Endpoint Auth
 
-Catat password `postgres` yang dibuat saat instalasi.
+### POST /api/auth/register
 
-### 2. Buat Database
+Registrasi peserta baru.
 
-```bash
-psql -U postgres
-CREATE DATABASE magang_db;
-\q
+Body:
+{
+  "nama": "Test Refresh",
+  "sekolah": "SMK Test",
+  "email": "testrefresh@example.com",
+  "password": "rahasia123"
+}
+
+Response 201:
+{
+  "sukses": true,
+  "pesan": "Registrasi berhasil",
+  "data": {
+    "id": 9,
+    "nama": "Test Refresh",
+    "email": "testrefresh@example.com",
+    "role": "peserta"
+  }
+}
+
+### POST /api/auth/login
+
+Login dan dapatkan access token + refresh token.
+
+Body:
+{
+  "email": "testrefresh@example.com",
+  "password": "rahasia123"
+}
+
+Response 200:
+{
+  "sukses": true,
+  "pesan": "Login berhasil",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "peserta": {
+      "id": 9,
+      "nama": "Test Refresh",
+      "sekolah": "SMK Test",
+      "email": "testrefresh@example.com",
+      "fase": 1,
+      "status": "aktif",
+      "role": "peserta"
+    }
+  }
+}
+
+### POST /api/auth/refresh
+
+Tukar refresh token dengan access token baru.
+
+Body:
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Response 200:
+{
+  "sukses": true,
+  "pesan": "Access token berhasil diperbarui",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+
+### POST /api/auth/logout
+
+Hapus refresh token dari database.
+
+Body:
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Response 200:
+{
+  "sukses": true,
+  "pesan": "Logout berhasil"
+}

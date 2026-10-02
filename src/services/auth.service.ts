@@ -1,10 +1,12 @@
 import { AppDataSource } from "../config/database.config";
 import { Peserta } from "../entities/Peserta.entity";
+import { RefreshToken } from "../entities/RefreshToken.entity";
 import { hashPassword, cekPassword } from "../utils/password";
-import { buatToken } from "../utils/jwt";
+import { buatAccessToken, buatRefreshToken, verifikasiRefreshToken } from "../utils/jwt";
 import { ConflictError, UnauthorizedError } from "../utils/AppError";
 
 const repo = AppDataSource.getRepository(Peserta);
+const refreshRepo = AppDataSource.getRepository(RefreshToken);
 
 interface RegisterInput {
     nama: string;
@@ -52,13 +54,41 @@ export async function login(data: LoginInput) {
         throw new UnauthorizedError("Email atau password salah");
     }
 
-    const token = buatToken({
+    const payload = {
         id: peserta.id,
         email: peserta.email,
         role: peserta.role,
+    };
+
+    const accessToken = buatAccessToken(payload);
+    const refreshToken = buatRefreshToken(payload);
+
+    // Simpan refresh token di database
+    await refreshRepo.save({
+        token: refreshToken,
+        pesertaId: peserta.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     const { password, ...pesertaAman } = peserta;
 
-    return { token, peserta: pesertaAman };
+    return { accessToken, refreshToken, peserta: pesertaAman };
+}
+
+export async function refresh(refreshTokenInput: string) {
+    const payload = verifikasiRefreshToken(refreshTokenInput);
+
+    const tersimpan = await refreshRepo.findOneBy({ token: refreshTokenInput });
+    if (!tersimpan) {
+        throw new UnauthorizedError("Refresh token tidak dikenali atau sudah dicabut");
+    }
+
+    const { iat, exp, ...payloadBersih } = payload as any;
+
+    const accessTokenBaru = buatAccessToken(payloadBersih);
+    return { accessToken: accessTokenBaru };
+}
+
+export async function logout(refreshTokenInput: string) {
+    await refreshRepo.delete({ token: refreshTokenInput });
 }

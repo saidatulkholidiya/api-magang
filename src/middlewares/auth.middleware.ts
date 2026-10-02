@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifikasiToken } from "../utils/jwt";
+import { verifikasiAccessToken } from "../utils/jwt";
 import { UnauthorizedError } from "../utils/AppError";
 
 export function authGuard(req: Request, res: Response, next: NextFunction): void {
@@ -15,7 +15,7 @@ export function authGuard(req: Request, res: Response, next: NextFunction): void
     }
 
     try {
-        const payload = verifikasiToken(token);
+        const payload = verifikasiAccessToken(token);
         req.user = payload;
         next();
     } catch (err) {

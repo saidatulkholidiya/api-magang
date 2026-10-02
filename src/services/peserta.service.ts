@@ -28,13 +28,13 @@ export const pesertaService = {
     },
 
     async ambilById(id: number): Promise<Peserta> {
-        const peserta = await repo.findOne({
-            where: { id },
-            relations: { jurnalList: true, skills: true },
-        });
+    const peserta = await repo.findOne({
+        where: { id },
+        relations: { jurnalList: true, skills: true },
+    });
 
-        if (!peserta) throw new NotFoundError("Peserta");
-        return peserta;
+    if (!peserta) throw new NotFoundError("Peserta");
+    return peserta;
     },
 
     async buat(data: { nama: string; sekolah: string; email: string; fase?: number; telepon?: string }): Promise<Peserta> {
