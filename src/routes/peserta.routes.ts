@@ -6,25 +6,16 @@ import { requireRole } from "../middlewares/role.middleware";
 
 const router = Router();
 
-router.get("/profil-saya", authGuard, pesertaController.getProfilSaya);
+// ROUTE STATIS
 
-// Route publik
 router.get("/", pesertaController.getSemuaPeserta);
-router.get("/:id", pesertaController.getPesertaById);
 router.post("/", validasiPeserta, pesertaController.buatPeserta);
 
-// Route yang butuh login
-router.put("/:id", authGuard, validasiPeserta, pesertaController.updatePeserta);
+// ROUTE DINAMIS
 
-// HANYA mentor yang boleh hapus peserta
-router.delete(
-    "/:id",
-    authGuard,
-    requireRole("mentor"),
-    pesertaController.hapusPeserta
-);
-
-// Nested route
+router.get("/:id", pesertaController.getPesertaById);
 router.get("/:id/jurnal", pesertaController.getJurnalPeserta);
+router.put("/:id", authGuard, validasiPeserta, pesertaController.updatePeserta);
+router.delete("/:id", authGuard, requireRole("mentor"), pesertaController.hapusPeserta);
 
 export default router;

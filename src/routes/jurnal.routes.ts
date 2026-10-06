@@ -7,7 +7,6 @@ import { requireRole } from "../middlewares/role.middleware";
 const router = Router();
 
 // Route yang butuh login (peserta & mentor)
-router.get("/saya", authGuard, jurnalController.getJurnalSaya);
 router.post("/", authGuard, validasiJurnal, jurnalController.buatJurnal);
 router.get("/:id", authGuard, jurnalController.getJurnalById);
 router.put("/:id", authGuard, validasiJurnal, jurnalController.updateJurnal);

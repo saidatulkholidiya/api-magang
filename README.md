@@ -94,3 +94,18 @@ Response 200:
   "sukses": true,
   "pesan": "Logout berhasil"
 }
+
+## Kenapa DELETE Harus Idempotent?
+
+DELETE harus idempotent karena kalau kita menghapus data yang sama berkali-kali,
+hasilnya harus tetap sama — data tersebut terhapus. Ini bikin sistem jadi
+predictable: client bisa retry request DELETE tanpa khawatir bikin efek ganda.
+Berbeda dengan POST yang bikin data baru tiap kali dipanggil.
+
+## Kenapa Tidak Boleh Menghapus Lewat GET?
+
+GET harus selalu "safe" — tidak mengubah data apapun. Kalau ada endpoint
+GET /peserta/1/hapus, browser atau crawler bisa memanggilnya secara otomatis
+(prefetch, cache, dll) tanpa kita sadari. Akibatnya data bisa terhapus tanpa
+ada yang menekan tombol apapun. Itu sebabnya aksi yang mengubah data harus
+pakai POST, PUT, PATCH, atau DELETE.
