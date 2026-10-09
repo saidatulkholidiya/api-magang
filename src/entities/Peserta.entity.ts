@@ -36,7 +36,7 @@ export class Peserta {
     @Column({ type: "varchar", nullable: true })
     telepon?: string;
 
-    @Column({ type: "varchar", default: "" })
+    @Column({ type: "varchar", default: "", select: false })
     password!: string;
 
     @Column({ type: "varchar", default: "peserta" })

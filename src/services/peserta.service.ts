@@ -1,40 +1,50 @@
 import { AppDataSource } from "../config/database.config";
 import { Peserta } from "../entities/Peserta.entity";
 import { NotFoundError, ConflictError } from "../utils/AppError";
+import { ListQuery, escapeLike } from "../utils/pagination";
+import { FindOptionsOrder, FindOptionsWhere, ILike } from "typeorm";
 
 const repo = AppDataSource.getRepository(Peserta);
 
+// Kolom yang BOLEH dipakai untuk sorting
+export const SORT_PESERTA = ["nama", "fase", "createdAt"] as const;
+
+interface FilterPeserta {
+    sekolah?: string;
+    fase?: number;
+}
+
 export const pesertaService = {
-    async ambilSemua(sekolah?: string, fase?: string, limit?: string): Promise<Peserta[]> {
-        const qb = repo.createQueryBuilder("peserta")
-            .leftJoinAndSelect("peserta.jurnalList", "jurnal")
-            .leftJoinAndSelect("peserta.skills", "skill");
+    async daftarPeserta(lq: ListQuery, filter: FilterPeserta) {
+        const dasar: FindOptionsWhere<Peserta> = {};
+        if (filter.sekolah) dasar.sekolah = filter.sekolah;
+        if (filter.fase) dasar.fase = filter.fase;
 
-        if (sekolah) {
-            qb.andWhere("peserta.sekolah ILIKE :sekolah", { sekolah: `%${sekolah}%` });
-        }
+        // Array di "where" berarti OR: cocokkan nama ATAU email
+        const where: FindOptionsWhere<Peserta> | FindOptionsWhere<Peserta>[] = lq.q
+            ? [
+                { ...dasar, nama: ILike(`%${escapeLike(lq.q)}%`) },
+                { ...dasar, email: ILike(`%${escapeLike(lq.q)}%`) },
+            ]
+            : dasar;
 
-        if (fase) {
-            qb.andWhere("peserta.fase = :fase", { fase: Number(fase) });
-        }
+        const [data, total] = await repo.findAndCount({
+            where,
+            order: { [lq.sortBy]: lq.order } as FindOptionsOrder<Peserta>,
+            skip: (lq.page - 1) * lq.limit,
+            take: lq.limit,
+        });
 
-        qb.orderBy("peserta.id", "ASC");
-
-        if (limit) {
-            qb.take(Number(limit));
-        }
-
-        return qb.getMany();
+        return { data, total };
     },
 
     async ambilById(id: number): Promise<Peserta> {
-    const peserta = await repo.findOne({
-        where: { id },
-        relations: { jurnalList: true, skills: true },
-    });
-
-    if (!peserta) throw new NotFoundError("Peserta");
-    return peserta;
+        const peserta = await repo.findOne({
+            where: { id },
+            relations: { jurnalList: true, skills: true },
+        });
+        if (!peserta) throw new NotFoundError("Peserta");
+        return peserta;
     },
 
     async buat(data: { nama: string; sekolah: string; email: string; fase?: number; telepon?: string }): Promise<Peserta> {
@@ -48,14 +58,12 @@ export const pesertaService = {
             fase: data.fase ?? 1,
             telepon: data.telepon,
         });
-
         return repo.save(baru);
     },
 
     async update(id: number, data: Partial<Peserta>): Promise<Peserta> {
         const peserta = await repo.findOneBy({ id });
         if (!peserta) throw new NotFoundError("Peserta");
-
         repo.merge(peserta, data);
         return repo.save(peserta);
     },
@@ -63,7 +71,6 @@ export const pesertaService = {
     async hapus(id: number): Promise<void> {
         const peserta = await repo.findOneBy({ id });
         if (!peserta) throw new NotFoundError("Peserta");
-
         await repo.remove(peserta);
     },
 };

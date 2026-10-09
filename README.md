@@ -109,3 +109,4 @@ GET /peserta/1/hapus, browser atau crawler bisa memanggilnya secara otomatis
 (prefetch, cache, dll) tanpa kita sadari. Akibatnya data bisa terhapus tanpa
 ada yang menekan tombol apapun. Itu sebabnya aksi yang mengubah data harus
 pakai POST, PUT, PATCH, atau DELETE.
+

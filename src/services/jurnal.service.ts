@@ -2,27 +2,53 @@ import { AppDataSource } from "../config/database.config";
 import { JurnalHarian } from "../entities/JurnalHarian.entity";
 import { Peserta } from "../entities/Peserta.entity";
 import { NotFoundError, UnauthorizedError } from "../utils/AppError";
+import { ListQuery } from "../utils/pagination";
+import {
+    Between,
+    FindOptionsOrder,
+    FindOptionsWhere,
+    MoreThanOrEqual,
+    LessThanOrEqual
+} from "typeorm";
 
 const repo = AppDataSource.getRepository(JurnalHarian);
 const pesertaRepo = AppDataSource.getRepository(Peserta);
 
+// Kolom yang BOLEH dipakai untuk sorting
+export const SORT_JURNAL = ["createdAt", "statusReview"] as const;
+
+interface FilterJurnal {
+    pesertaId?: number;
+    statusReview?: "belum" | "sudah";
+    from?: string;
+    to?: string;
+}
+
 export const jurnalService = {
-    async ambilSemua(pesertaId?: string, status?: string): Promise<JurnalHarian[]> {
-        const qb = repo.createQueryBuilder("jurnal")
-            .leftJoinAndSelect("jurnal.peserta", "peserta")
-            .leftJoinAndSelect("jurnal.reviewer", "reviewer");
+    async daftarJurnal(lq: ListQuery, filter: FilterJurnal) {
+        const dasar: FindOptionsWhere<JurnalHarian> = {};
 
-        if (pesertaId) {
-            qb.andWhere("jurnal.pesertaId = :pesertaId", { pesertaId: Number(pesertaId) });
+        if (filter.pesertaId) dasar.pesertaId = filter.pesertaId;
+        if (filter.statusReview) dasar.statusReview = filter.statusReview;
+
+        // Filter tanggal
+        if (filter.from && filter.to) {
+            dasar.createdAt = Between(new Date(filter.from), new Date(filter.to));
+        } else if (filter.from) {
+            dasar.createdAt = MoreThanOrEqual(new Date(filter.from));
+        } else if (filter.to) {
+            dasar.createdAt = LessThanOrEqual(new Date(filter.to));
         }
 
-        if (status) {
-            qb.andWhere("jurnal.statusReview = :status", { status });
-        }
+        const [data, total] = await repo.findAndCount({
+            where: dasar,
+            relations: { peserta: true, reviewer: true },
+            order: { [lq.sortBy]: lq.order } as FindOptionsOrder<JurnalHarian>,
+            skip: (lq.page - 1) * lq.limit,
+            take: lq.limit,
+        });
 
-        qb.orderBy("jurnal.id", "ASC");
-
-        return qb.getMany();
+        return { data, total };
     },
 
     async ambilById(id: number): Promise<JurnalHarian> {
@@ -30,7 +56,6 @@ export const jurnalService = {
             where: { id },
             relations: { peserta: true, reviewer: true },
         });
-
         if (!jurnal) throw new NotFoundError("Jurnal");
         return jurnal;
     },
@@ -56,27 +81,24 @@ export const jurnalService = {
             linkCommit: data.linkCommit,
             statusReview: "belum",
         });
-
         return repo.save(baru);
     },
 
     async update(id: number, data: Partial<JurnalHarian>, userId: number, userRole: string): Promise<JurnalHarian> {
-    const jurnal = await repo.findOneBy({ id });
-    if (!jurnal) throw new NotFoundError("Jurnal");
+        const jurnal = await repo.findOneBy({ id });
+        if (!jurnal) throw new NotFoundError("Jurnal");
 
-    // Kalo BUKAN mentor, cek ownership
-    if (userRole !== "mentor" && jurnal.pesertaId !== userId) {
-        throw new UnauthorizedError("Kamu tidak berhak mengubah jurnal ini");
-    }
+        if (userRole !== "mentor" && jurnal.pesertaId !== userId) {
+            throw new UnauthorizedError("Kamu tidak berhak mengubah jurnal ini");
+        }
 
-    repo.merge(jurnal, data);
-    return repo.save(jurnal);
+        repo.merge(jurnal, data);
+        return repo.save(jurnal);
     },
 
     async review(id: number, status: "belum" | "sudah"): Promise<JurnalHarian> {
         const jurnal = await repo.findOneBy({ id });
         if (!jurnal) throw new NotFoundError("Jurnal");
-
         jurnal.statusReview = status;
         return repo.save(jurnal);
     },
@@ -84,7 +106,6 @@ export const jurnalService = {
     async hapus(id: number): Promise<void> {
         const jurnal = await repo.findOneBy({ id });
         if (!jurnal) throw new NotFoundError("Jurnal");
-
         await repo.remove(jurnal);
     },
 };

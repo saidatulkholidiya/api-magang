@@ -38,12 +38,15 @@ export async function register(data: RegisterInput) {
 
     const tersimpan = await repo.save(peserta);
     const { password, ...aman } = tersimpan;
-
     return aman;
 }
 
 export async function login(data: LoginInput) {
-    const peserta = await repo.findOneBy({ email: data.email });
+    const peserta = await repo
+        .createQueryBuilder("p")
+        .addSelect("p.password")
+        .where("p.email = :email", { email: data.email })
+        .getOne();
 
     if (!peserta) {
         throw new UnauthorizedError("Email atau password salah");
@@ -63,7 +66,6 @@ export async function login(data: LoginInput) {
     const accessToken = buatAccessToken(payload);
     const refreshToken = buatRefreshToken(payload);
 
-    // Simpan refresh token di database
     await refreshRepo.save({
         token: refreshToken,
         pesertaId: peserta.id,

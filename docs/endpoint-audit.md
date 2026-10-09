@@ -6,15 +6,15 @@
 | POST | /api/auth/login | ❌ | - | - |
 | POST | /api/auth/refresh | ❌ | - | - |
 | POST | /api/auth/logout | ❌ | - | - |
+| GET | /api/me | ✅ | peserta/mentor | - |
+| GET | /api/me/jurnal | ✅ | peserta/mentor | - |
 | GET | /api/peserta | ❌ | - | - |
 | GET | /api/peserta/:id | ❌ | - | - |
-| GET | /api/peserta/profil-saya | ✅ | peserta/mentor | ❌ "profil-saya" campur bahasa |
 | POST | /api/peserta | ❌ | - | - |
 | PUT | /api/peserta/:id | ✅ | peserta/mentor | - |
 | DELETE | /api/peserta/:id | ✅ | mentor | - |
 | GET | /api/peserta/:id/jurnal | ❌ | - | - |
 | GET | /api/jurnal | ✅ | mentor | - |
-| GET | /api/jurnal/saya | ✅ | peserta/mentor | ❌ "saya" campur bahasa |
 | GET | /api/jurnal/:id | ✅ | peserta/mentor | - |
 | POST | /api/jurnal | ✅ | peserta/mentor | - |
 | PUT | /api/jurnal/:id | ✅ | peserta/mentor | - |
@@ -22,18 +22,22 @@
 | DELETE | /api/jurnal/:id | ✅ | peserta/mentor | - |
 | GET | /api/stats | ❌ | - | - |
 
+## Test Kasus Tepi (SOAL 5)
 
-## Status Code untuk 10 Skenario
+| Kasus | Hasil | Status |
+|-------|-------|--------|
+| ?page=0 | page jadi 1 | ✅ |
+| ?page=-5 | page jadi 1 | ✅ |
+| ?page=abc | page jadi 1 | ✅ |
+| ?limit=1000 | limit jadi 100 | ✅ |
+| ?limit=0 | limit jadi 1 | ✅ |
+| ?limit=abc | limit jadi 10 | ✅ |
+| ?sortBy=password | fallback ke createdAt | ✅ |
+| ?sortBy=nama;DROP TABLE peserta | fallback ke createdAt | ✅ |
+| ?q=% | di-escape, gak cocokin semua | ✅ |
+| ?q=_ | di-escape | ✅ |
+| ?q= | tampil semua | ✅ |
 
-| Skenario | Status Code | Alasan |
-|----------|-------------|--------|
-| a. Register berhasil | **201** | Bikin data baru |
-| b. Register dengan email duplikat | **409** | Bentrok data |
-| c. Login dengan password salah | **401** | Kredensial salah |
-| d. Akses /me tanpa token | **401** | Belum login |
-| e. Peserta akses endpoint mentor | **403** | Udah login, gak berhak |
-| f. GET /peserta/9999 | **404** | Data gak ada |
-| g. DELETE /peserta/1 berhasil | **204** | Berhasil tanpa body |
-| h. POST /peserta dengan JSON rusak | **400** | Request gak bisa dipahami |
-| i. POST /peserta dengan email format salah | **422** | Format OK, isi salah |
-| j. Database mati | **503** | Dependensi mati |
+
+
+

@@ -1,24 +1,35 @@
 import { Request, Response } from "express";
-import { jurnalService } from "../services/jurnal.service";
+import { jurnalService, SORT_JURNAL } from "../services/jurnal.service";
 import { asyncHandler } from "../utils/asyncHandler";
-import { sukses, suksesDenganTotal, dibuat } from "../utils/response";
+import { sukses, suksesDenganTotal, suksesDenganMeta, dibuat } from "../utils/response";
+import { parseListQuery, buatMeta } from "../utils/pagination";
 import { JurnalBody, JurnalQuery } from "../types";
 
-export const getJurnalSaya = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.id;
-    const data = await jurnalService.ambilByPeserta(userId);
-    suksesDenganTotal(res, data, "Jurnal milik saya");
-});
+export const getSemuaJurnal = asyncHandler(async (req: Request, res: Response) => {
+    const lq = parseListQuery(req.query, SORT_JURNAL);
+    const pesertaId = req.query.pesertaId ? Number(req.query.pesertaId) : undefined;
+    const statusReview = req.query.statusReview as "belum" | "sudah" | undefined;
+    const from = typeof req.query.from === "string" ? req.query.from : undefined;
+    const to = typeof req.query.to === "string" ? req.query.to : undefined;
 
-export const getSemuaJurnal = asyncHandler(async (req: Request<{}, {}, {}, JurnalQuery>, res: Response) => {
-    const { peserta, status } = req.query;
-    const data = await jurnalService.ambilSemua(peserta, status);
-    suksesDenganTotal(res, data);
+    const { data, total } = await jurnalService.daftarJurnal(lq, {
+        pesertaId,
+        statusReview,
+        from,
+        to,
+    });
+    suksesDenganMeta(res, data, buatMeta(lq.page, lq.limit, total));
 });
 
 export const getJurnalById = asyncHandler(async (req: Request, res: Response) => {
     const data = await jurnalService.ambilById(Number(req.params.id));
     sukses(res, data);
+});
+
+export const getJurnalSaya = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const data = await jurnalService.ambilByPeserta(userId);
+    suksesDenganTotal(res, data, "Jurnal milik saya");
 });
 
 export const buatJurnal = asyncHandler(async (req: Request<{}, {}, JurnalBody>, res: Response) => {
