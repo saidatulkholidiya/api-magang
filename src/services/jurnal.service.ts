@@ -1,7 +1,7 @@
 import { AppDataSource } from "../config/database.config";
 import { JurnalHarian } from "../entities/JurnalHarian.entity";
 import { Peserta } from "../entities/Peserta.entity";
-import { NotFoundError, UnauthorizedError } from "../utils/AppError";
+import { NotFoundError, ForbiddenError } from "../utils/AppError";
 import { ListQuery } from "../utils/pagination";
 import {
     Between,
@@ -89,7 +89,7 @@ export const jurnalService = {
         if (!jurnal) throw new NotFoundError("Jurnal");
 
         if (userRole !== "mentor" && jurnal.pesertaId !== userId) {
-            throw new UnauthorizedError("Kamu tidak berhak mengubah jurnal ini");
+            throw new ForbiddenError("Kamu tidak berhak mengubah jurnal ini");
         }
 
         repo.merge(jurnal, data);
