@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
+import { randomUUID } from "crypto";
 
 export function requestId(req: Request, res: Response, next: NextFunction): void {
-    req.requestId = Math.random().toString(36).substring(2, 10);
-    res.setHeader("X-Request-Id", req.requestId);
+    const id = (req.headers["x-request-id"] as string | undefined) ?? randomUUID();
+    req.requestId = id;
+    res.setHeader("X-Request-Id", id);
     next();
 }

@@ -33,6 +33,9 @@ export const config = {
         expiresIn: opsional("JWT_EXPIRES_IN", "15m"),
         refreshExpiresIn: opsional("JWT_REFRESH_EXPIRES_IN", "7d"),
     },
+    cors: {
+        origins: opsional("CORS_ORIGINS", "http://localhost:5173").split(","),
+    },
 } as const;
 
 export const isDev = config.app.env === "development";
