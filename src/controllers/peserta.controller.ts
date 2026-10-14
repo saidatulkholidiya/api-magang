@@ -60,7 +60,6 @@ export const patchPeserta = asyncHandler(async (req: Request, res: Response) => 
     const userRole = req.user!.role;
     const targetId = Number(req.params.id);
 
-    // Kalo bukan mentor, cuma boleh edit dirinya sendiri
     if (userRole !== "mentor" && userId !== targetId) {
         throw new ForbiddenError("Kamu tidak berhak mengubah data peserta lain");
     }
