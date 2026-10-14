@@ -11,7 +11,11 @@ router.get("/not-found", asyncHandler(async (req, res) => {
 
 // GET /api/test/validation
 router.get("/validation", asyncHandler(async (req, res) => {
-    throw new ValidationError(["Field A wajib", "Field B minimal 5", "Field C harus angka"]);
+    throw new ValidationError([
+        { field: "fieldA", pesan: "Field A wajib diisi" },
+        { field: "fieldB", pesan: "Field B minimal 5 karakter" },
+        { field: "fieldC", pesan: "Field C harus berupa angka" }
+    ]);
 }));
 
 // GET /api/test/unauthorized

@@ -19,9 +19,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "1mb" }));
 app.use(requestLogger);
-app.use("/api", rateLimiter);
-app.use("/api", healthRoutes);
-app.use("/api", routes);
+app.use("/api/v1", rateLimiter);
+app.use("/api/v1", healthRoutes);
+app.use("/api/v1", routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

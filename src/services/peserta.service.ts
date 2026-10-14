@@ -73,4 +73,19 @@ export const pesertaService = {
         if (!peserta) throw new NotFoundError("Peserta");
         await repo.remove(peserta);
     },
+
+    async patch(id: number, body: Record<string, unknown>): Promise<Peserta> {
+    const peserta = await repo.findOneBy({ id });
+    if (!peserta) throw new NotFoundError("Peserta");
+
+    const { nama, sekolah, telepon } = body;
+
+    const perubahan = Object.fromEntries(
+        Object.entries({ nama, sekolah, telepon })
+            .filter(([, nilai]) => nilai !== undefined)
+    );
+
+    repo.merge(peserta, perubahan);
+    return repo.save(peserta);
+},
 };

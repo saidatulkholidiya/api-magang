@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { sukses, suksesDenganTotal, suksesDenganMeta, dibuat } from "../utils/response";
 import { parseListQuery, buatMeta } from "../utils/pagination";
 import { PesertaBody, PesertaQuery } from "../types";
+import { ForbiddenError } from "../utils/AppError";
 
 export const getSemuaPeserta = asyncHandler(async (req: Request, res: Response) => {
     const lq = parseListQuery(req.query, SORT_PESERTA);
@@ -19,9 +20,18 @@ export const getPesertaById = asyncHandler(async (req: Request, res: Response) =
     sukses(res, data);
 });
 
-export const buatPeserta = asyncHandler(async (req: Request<{}, {}, PesertaBody>, res: Response) => {
+
+export const buatPeserta = asyncHandler(async (req, res) => {
     const data = await pesertaService.buat(req.body);
-    dibuat(res, data);
+    
+    res
+        .status(201)
+        .location(`/api/v1/peserta/${data.id}`)
+        .json({
+            sukses: true,
+            pesan: "Peserta berhasil dibuat",
+            data,
+        });
 });
 
 export const updatePeserta = asyncHandler(async (req: Request<{ id: string }, {}, PesertaBody>, res: Response) => {
@@ -43,4 +53,18 @@ export const getProfilSaya = asyncHandler(async (req: Request, res: Response) =>
 export const getJurnalPeserta = asyncHandler(async (req: Request, res: Response) => {
     const data = await pesertaService.ambilById(Number(req.params.id));
     sukses(res, data.jurnalList ?? [], `Jurnal milik ${data.nama}`);
+});
+
+export const patchPeserta = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
+    const targetId = Number(req.params.id);
+
+    // Kalo bukan mentor, cuma boleh edit dirinya sendiri
+    if (userRole !== "mentor" && userId !== targetId) {
+        throw new ForbiddenError("Kamu tidak berhak mengubah data peserta lain");
+    }
+
+    const data = await pesertaService.patch(targetId, req.body);
+    sukses(res, data, "Data berhasil diupdate");
 });
