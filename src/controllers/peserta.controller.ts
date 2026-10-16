@@ -5,6 +5,8 @@ import { sukses, suksesDenganTotal, suksesDenganMeta, dibuat } from "../utils/re
 import { parseListQuery, buatMeta } from "../utils/pagination";
 import { PesertaBody, PesertaQuery } from "../types";
 import { ForbiddenError } from "../utils/AppError";
+import { ambilDto } from "../middlewares/validasi.middleware";
+import { UpdateProfilDto } from "../dto/peserta.dto";
 
 export const getSemuaPeserta = asyncHandler(async (req: Request, res: Response) => {
     const lq = parseListQuery(req.query, SORT_PESERTA);
@@ -64,6 +66,14 @@ export const patchPeserta = asyncHandler(async (req: Request, res: Response) => 
         throw new ForbiddenError("Kamu tidak berhak mengubah data peserta lain");
     }
 
-    const data = await pesertaService.patch(targetId, req.body);
-    sukses(res, data, "Data berhasil diupdate");
+    const data = ambilDto<UpdateProfilDto>(req);
+    const hasil = await pesertaService.ubahProfil(targetId, data);
+    sukses(res, hasil, "Data berhasil diupdate");
+});
+
+export const patchMe = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const data = ambilDto<UpdateProfilDto>(req);
+    const hasil = await pesertaService.ubahProfil(userId, data);
+    sukses(res, hasil, "Profil berhasil diupdate");
 });

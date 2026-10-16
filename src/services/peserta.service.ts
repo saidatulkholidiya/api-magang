@@ -1,17 +1,23 @@
 import { AppDataSource } from "../config/database.config";
 import { Peserta } from "../entities/Peserta.entity";
-import { NotFoundError, ConflictError } from "../utils/AppError";
+import { NotFoundError, ConflictError, ValidationError } from "../utils/AppError";
 import { ListQuery, escapeLike } from "../utils/pagination";
 import { FindOptionsOrder, FindOptionsWhere, ILike } from "typeorm";
+import { UpdateProfilDto } from "../dto/peserta.dto";
 
 const repo = AppDataSource.getRepository(Peserta);
 
-// Kolom yang BOLEH dipakai untuk sorting
 export const SORT_PESERTA = ["nama", "fase", "createdAt"] as const;
 
 interface FilterPeserta {
     sekolah?: string;
     fase?: number;
+}
+
+function hanyaYangDiisi<T extends object>(data: T): Partial<T> {
+    return Object.fromEntries(
+        Object.entries(data).filter(([, nilai]) => nilai !== undefined)
+    ) as Partial<T>;
 }
 
 export const pesertaService = {
@@ -20,7 +26,6 @@ export const pesertaService = {
         if (filter.sekolah) dasar.sekolah = filter.sekolah;
         if (filter.fase) dasar.fase = filter.fase;
 
-        // Array di "where" berarti OR: cocokkan nama ATAU email
         const where: FindOptionsWhere<Peserta> | FindOptionsWhere<Peserta>[] = lq.q
             ? [
                 { ...dasar, nama: ILike(`%${escapeLike(lq.q)}%`) },
@@ -74,18 +79,18 @@ export const pesertaService = {
         await repo.remove(peserta);
     },
 
-    async patch(id: number, body: Record<string, unknown>): Promise<Peserta> {
-    const peserta = await repo.findOneBy({ id });
-    if (!peserta) throw new NotFoundError("Peserta");
+    async ubahProfil(id: number, data: UpdateProfilDto): Promise<Peserta> {
+        const peserta = await repo.findOneBy({ id });
+        if (!peserta) throw new NotFoundError("Peserta");
 
-    const { nama, sekolah, telepon } = body;
+        const perubahan = hanyaYangDiisi(data);
+        if (Object.keys(perubahan).length === 0) {
+            throw new ValidationError([
+                { field: "body", pesan: "Minimal satu field harus diisi" },
+            ]);
+        }
 
-    const perubahan = Object.fromEntries(
-        Object.entries({ nama, sekolah, telepon })
-            .filter(([, nilai]) => nilai !== undefined)
-    );
-
-    repo.merge(peserta, perubahan);
-    return repo.save(peserta);
-},
+        repo.merge(peserta, perubahan);
+        return repo.save(peserta);
+    },
 };

@@ -1,89 +1,47 @@
-import { Request, Response, NextFunction } from "express";
-import { ValidationError, FieldError } from "../utils/AppError";
+import { Request, RequestHandler } from "express";
+import { ClassConstructor, plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
+import { ValidationError } from "../utils/AppError";
+import { ratakan } from "../utils/validasi.util";
 
-export function validasiPeserta(req: Request, res: Response, next: NextFunction): void {
-    const { nama, sekolah } = req.body;
-    const errors: FieldError[] = [];
+type Sumber = "body" | "query" | "params";
 
-    if (!nama || typeof nama !== "string" || nama.trim().length < 3) {
-        errors.push({ field: "nama", pesan: "Nama wajib diisi, minimal 3 karakter" });
-    }
-    if (!sekolah || typeof sekolah !== "string") {
-        errors.push({ field: "sekolah", pesan: "Sekolah wajib diisi" });
-    }
+export function validasi<T extends object>(
+    dto: ClassConstructor<T>,
+    sumber: Sumber = "body"
+): RequestHandler {
+    return async (req, _res, next) => {
+        try {
+            const mentah: unknown = req[sumber] ?? {};
 
-    if (errors.length > 0) {
-        next(new ValidationError(errors));
-        return;
-    }
+            if (typeof mentah !== "object" || mentah === null || Array.isArray(mentah)) {
+                throw new ValidationError([
+                    { field: sumber, pesan: `${sumber} harus berupa objek` },
+                ]);
+            }
 
-    next();
-}
+            const instance = plainToInstance(dto, mentah as Record<string, unknown>, {
+                exposeDefaultValues: true,
+            });
 
-export function validasiJurnal(req: Request, res: Response, next: NextFunction): void {
-    const { pesertaId, kegiatan } = req.body;
-    const errors: FieldError[] = [];
+            const errors = await validate(instance, {
+                whitelist: true,
+                forbidNonWhitelisted: sumber === "body",
+                validationError: { target: false, value: false },
+            });
 
-    if (!pesertaId || typeof pesertaId !== "number") {
-        errors.push({ field: "pesertaId", pesan: "PesertaId wajib diisi dan berupa angka" });
-    }
-    if (!kegiatan || typeof kegiatan !== "string" || kegiatan.trim().length < 10) {
-        errors.push({ field: "kegiatan", pesan: "Kegiatan wajib diisi, minimal 10 karakter" });
-    }
+            if (errors.length > 0) {
+                throw new ValidationError(ratakan(errors));
+            }
 
-    if (errors.length > 0) {
-        next(new ValidationError(errors));
-        return;
-    }
-
-    next();
-}
-
-export function validasiRegister(req: Request, res: Response, next: NextFunction): void {
-    const { nama, sekolah, email, password } = req.body;
-    const errors: FieldError[] = [];
-
-    if (!nama || typeof nama !== "string" || nama.trim().length < 3) {
-        errors.push({ field: "nama", pesan: "Nama wajib diisi, minimal 3 karakter" });
-    }
-    if (!sekolah || typeof sekolah !== "string") {
-        errors.push({ field: "sekolah", pesan: "Sekolah wajib diisi" });
-    }
-    if (!email || typeof email !== "string") {
-        errors.push({ field: "email", pesan: "Email wajib diisi" });
-    } else {
-        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!regexEmail.test(email)) {
-            errors.push({ field: "email", pesan: "Format email tidak valid" });
+            req.validated = { ...req.validated, [sumber]: instance };
+            next();
+        } catch (err) {
+            next(err);
         }
-    }
-    if (!password || typeof password !== "string" || password.length < 8) {
-        errors.push({ field: "password", pesan: "Password minimal 8 karakter" });
-    }
-
-    if (errors.length > 0) {
-        next(new ValidationError(errors));
-        return;
-    }
-
-    next();
+    };
 }
 
-export function validasiLogin(req: Request, res: Response, next: NextFunction): void {
-    const { email, password } = req.body;
-    const errors: FieldError[] = [];
-
-    if (!email || typeof email !== "string") {
-        errors.push({ field: "email", pesan: "Email wajib diisi" });
-    }
-    if (!password || typeof password !== "string") {
-        errors.push({ field: "password", pesan: "Password wajib diisi" });
-    }
-
-    if (errors.length > 0) {
-        next(new ValidationError(errors));
-        return;
-    }
-
-    next();
+export function ambilDto<T>(req: Request, sumber: Sumber = "body"): T {
+    return req.validated?.[sumber] as T;
 }

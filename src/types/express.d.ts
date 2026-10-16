@@ -3,8 +3,13 @@ import { JwtPayload } from "../utils/jwt";
 declare global {
     namespace Express {
         interface Request {
-            requestId?: string;
             user?: JwtPayload;
+            requestId?: string;
+            validated?: {
+                body?: unknown;
+                query?: unknown;
+                params?: unknown;
+            };
         }
     }
 }
