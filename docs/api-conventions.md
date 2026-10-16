@@ -22,12 +22,12 @@ Contoh:
 | DELETE | Hapus data | 204 (tanpa body) |
 
 Status code error:
-- 400 request rusak (JSON invalid)
+- 400 hanya untuk body yang tidak bisa di-parse sama sekali (INVALID_JSON)
 - 401 belum login / token invalid / token expired
 - 403 sudah login tapi tidak berhak
 - 404 data atau route tidak ada
 - 409 konflik data (email duplikat)
-- 422 validasi gagal
+- 422 SEMUA kegagalan validasi DTO (body, query, maupun params)
 - 429 terlalu banyak request
 - 500 bug di server
 - 503 dependensi mati (database down)

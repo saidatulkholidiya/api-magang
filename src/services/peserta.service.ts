@@ -1,9 +1,9 @@
 import { AppDataSource } from "../config/database.config";
 import { Peserta } from "../entities/Peserta.entity";
 import { NotFoundError, ConflictError, ValidationError } from "../utils/AppError";
-import { ListQuery, escapeLike } from "../utils/pagination";
+import { escapeLike } from "../utils/pagination";
 import { FindOptionsOrder, FindOptionsWhere, ILike } from "typeorm";
-import { UpdateProfilDto } from "../dto/peserta.dto";
+import { UpdateProfilDto, ListPesertaQueryDto } from "../dto/peserta.dto";
 
 const repo = AppDataSource.getRepository(Peserta);
 
@@ -21,23 +21,23 @@ function hanyaYangDiisi<T extends object>(data: T): Partial<T> {
 }
 
 export const pesertaService = {
-    async daftarPeserta(lq: ListQuery, filter: FilterPeserta) {
+    async daftarPeserta(query: ListPesertaQueryDto, filter: FilterPeserta) {
         const dasar: FindOptionsWhere<Peserta> = {};
         if (filter.sekolah) dasar.sekolah = filter.sekolah;
         if (filter.fase) dasar.fase = filter.fase;
 
-        const where: FindOptionsWhere<Peserta> | FindOptionsWhere<Peserta>[] = lq.q
+        const where: FindOptionsWhere<Peserta> | FindOptionsWhere<Peserta>[] = query.q
             ? [
-                { ...dasar, nama: ILike(`%${escapeLike(lq.q)}%`) },
-                { ...dasar, email: ILike(`%${escapeLike(lq.q)}%`) },
+                { ...dasar, nama: ILike(`%${escapeLike(query.q)}%`) },
+                { ...dasar, email: ILike(`%${escapeLike(query.q)}%`) },
             ]
             : dasar;
 
         const [data, total] = await repo.findAndCount({
             where,
-            order: { [lq.sortBy]: lq.order } as FindOptionsOrder<Peserta>,
-            skip: (lq.page - 1) * lq.limit,
-            take: lq.limit,
+            order: { [query.sortBy]: query.order } as FindOptionsOrder<Peserta>,
+            skip: (query.page - 1) * query.limit,
+            take: query.limit,
         });
 
         return { data, total };

@@ -12,7 +12,15 @@ export function validasi<T extends object>(
 ): RequestHandler {
     return async (req, _res, next) => {
         try {
-            const mentah: unknown = req[sumber] ?? {};
+            let mentah: unknown;
+
+            if (sumber === "query") {
+                mentah = { ...req.query };
+            } else if (sumber === "params") {
+                mentah = { ...req.params };
+            } else {
+                mentah = req.body ?? {};
+            }
 
             if (typeof mentah !== "object" || mentah === null || Array.isArray(mentah)) {
                 throw new ValidationError([
@@ -22,6 +30,8 @@ export function validasi<T extends object>(
 
             const instance = plainToInstance(dto, mentah as Record<string, unknown>, {
                 exposeDefaultValues: true,
+                enableImplicitConversion: true,
+                excludeExtraneousValues: false,
             });
 
             const errors = await validate(instance, {

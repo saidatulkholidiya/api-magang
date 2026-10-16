@@ -2,19 +2,19 @@ import { AppDataSource } from "../config/database.config";
 import { JurnalHarian } from "../entities/JurnalHarian.entity";
 import { Peserta } from "../entities/Peserta.entity";
 import { NotFoundError, ForbiddenError } from "../utils/AppError";
-import { ListQuery } from "../utils/pagination";
+import { escapeLike } from "../utils/pagination";
+import { ListJurnalQueryDto } from "../dto/jurnal.dto";
 import {
     Between,
     FindOptionsOrder,
     FindOptionsWhere,
     MoreThanOrEqual,
-    LessThanOrEqual
+    LessThanOrEqual,
 } from "typeorm";
 
 const repo = AppDataSource.getRepository(JurnalHarian);
 const pesertaRepo = AppDataSource.getRepository(Peserta);
 
-// Kolom yang BOLEH dipakai untuk sorting
 export const SORT_JURNAL = ["createdAt", "statusReview"] as const;
 
 interface FilterJurnal {
@@ -22,16 +22,17 @@ interface FilterJurnal {
     statusReview?: "belum" | "sudah";
     from?: string;
     to?: string;
+    belumDireview?: boolean;
 }
 
 export const jurnalService = {
-    async daftarJurnal(lq: ListQuery, filter: FilterJurnal) {
+    async daftarJurnal(query: ListJurnalQueryDto, filter: FilterJurnal) {
         const dasar: FindOptionsWhere<JurnalHarian> = {};
 
         if (filter.pesertaId) dasar.pesertaId = filter.pesertaId;
         if (filter.statusReview) dasar.statusReview = filter.statusReview;
+        if (filter.belumDireview === true) dasar.statusReview = "belum";
 
-        // Filter tanggal
         if (filter.from && filter.to) {
             dasar.createdAt = Between(new Date(filter.from), new Date(filter.to));
         } else if (filter.from) {
@@ -43,9 +44,9 @@ export const jurnalService = {
         const [data, total] = await repo.findAndCount({
             where: dasar,
             relations: { peserta: true, reviewer: true },
-            order: { [lq.sortBy]: lq.order } as FindOptionsOrder<JurnalHarian>,
-            skip: (lq.page - 1) * lq.limit,
-            take: lq.limit,
+            order: { [query.sortBy]: query.order } as FindOptionsOrder<JurnalHarian>,
+            skip: (query.page - 1) * query.limit,
+            take: query.limit,
         });
 
         return { data, total };
