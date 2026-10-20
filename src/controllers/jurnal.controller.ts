@@ -1,56 +1,69 @@
 import { Request, Response } from "express";
-import { jurnalService, SORT_JURNAL } from "../services/jurnal.service";
+import { jurnalService } from "../services/jurnal.service";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sukses, suksesDenganTotal, suksesDenganMeta, dibuat } from "../utils/response";
-import { parseListQuery, buatMeta } from "../utils/pagination";
-import { JurnalBody, JurnalQuery } from "../types";
+import { buatMeta } from "../utils/pagination";
+import { ambilDto } from "../middlewares/validasi.middleware";
+import { CreateJurnalDto, UpdateJurnalDto, ReviewJurnalDto, ListJurnalQueryDto } from "../dto/jurnal.dto";
+import { IdParamDto } from "../dto/common.dto";
+import { JurnalResponseDto } from "../dto/response/jurnal.response";
+import { serialisasi } from "../utils/serialisasi";
 
 export const getSemuaJurnal = asyncHandler(async (req: Request, res: Response) => {
-    const lq = parseListQuery(req.query, SORT_JURNAL);
-    const pesertaId = req.query.pesertaId ? Number(req.query.pesertaId) : undefined;
-    const statusReview = req.query.statusReview as "belum" | "sudah" | undefined;
-    const from = typeof req.query.from === "string" ? req.query.from : undefined;
-    const to = typeof req.query.to === "string" ? req.query.to : undefined;
+    const query = ambilDto<ListJurnalQueryDto>(req, "query");
 
-    const { data, total } = await jurnalService.daftarJurnal(lq, {
-        pesertaId,
-        statusReview,
-        from,
-        to,
+    const { data, total } = await jurnalService.daftarJurnal(query, {
+        pesertaId: query.pesertaId,
+        statusReview: query.statusReview,
+        from: query.from,
+        to: query.to,
     });
-    suksesDenganMeta(res, data, buatMeta(lq.page, lq.limit, total));
+    suksesDenganMeta(res, data, buatMeta(query.page, query.limit, total));
 });
 
 export const getJurnalById = asyncHandler(async (req: Request, res: Response) => {
-    const data = await jurnalService.ambilById(Number(req.params.id));
-    sukses(res, data);
+    const { id } = ambilDto<IdParamDto>(req, "params");
+    const data = await jurnalService.ambilById(id);
+    sukses(res, serialisasi(JurnalResponseDto, data));
 });
 
 export const getJurnalSaya = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const data = await jurnalService.ambilByPeserta(userId);
-    suksesDenganTotal(res, data, "Jurnal milik saya");
+    suksesDenganTotal(res, serialisasi(JurnalResponseDto, data), "Jurnal milik saya");
 });
 
-export const buatJurnal = asyncHandler(async (req: Request<{}, {}, JurnalBody>, res: Response) => {
-    const data = await jurnalService.buat(req.body);
-    dibuat(res, data);
+export const buatJurnal = asyncHandler(async (req: Request, res: Response) => {
+    const data = ambilDto<CreateJurnalDto>(req);
+    const userId = req.user!.id;
+
+    const hasil = await jurnalService.buat({
+        ...data,
+        pesertaId: userId,
+    });
+    dibuat(res, hasil);
 });
 
-export const updateJurnal = asyncHandler(async (req: Request<{ id: string }, {}, JurnalBody>, res: Response) => {
+export const updateJurnal = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = ambilDto<IdParamDto>(req, "params");
+    const data = ambilDto<UpdateJurnalDto>(req);
     const userId = req.user!.id;
     const userRole = req.user!.role;
-    const data = await jurnalService.update(Number(req.params.id), req.body, userId, userRole);
-    sukses(res, data, "Data berhasil diupdate");
+
+    const hasil = await jurnalService.update(id, data, userId, userRole);
+    sukses(res, hasil, "Data berhasil diupdate");
 });
 
-export const reviewJurnal = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const status = req.body.status || "sudah";
-    const data = await jurnalService.review(Number(req.params.id), status);
-    sukses(res, data, "Status review berhasil diubah");
+export const reviewJurnal = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = ambilDto<IdParamDto>(req, "params");
+    const data = ambilDto<ReviewJurnalDto>(req);
+
+    const hasil = await jurnalService.review(id, data.statusReview, data.catatan);
+    sukses(res, hasil, "Status review berhasil diubah");
 });
 
 export const hapusJurnal = asyncHandler(async (req: Request, res: Response) => {
-    await jurnalService.hapus(Number(req.params.id));
+    const { id } = ambilDto<IdParamDto>(req, "params");
+    await jurnalService.hapus(id);
     res.status(204).send();
 });

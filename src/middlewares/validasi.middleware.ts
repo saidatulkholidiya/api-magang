@@ -31,8 +31,7 @@ export function validasi<T extends object>(
             const instance = plainToInstance(dto, mentah as Record<string, unknown>, {
                 exposeDefaultValues: true,
                 enableImplicitConversion: true,
-                excludeExtraneousValues: false,
-            });
+                });
 
             const errors = await validate(instance, {
                 whitelist: true,

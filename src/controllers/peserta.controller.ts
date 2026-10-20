@@ -7,22 +7,22 @@ import { ForbiddenError } from "../utils/AppError";
 import { ambilDto } from "../middlewares/validasi.middleware";
 import { UpdateProfilDto, ListPesertaQueryDto } from "../dto/peserta.dto";
 import { IdParamDto } from "../dto/common.dto";
+import { PesertaResponseDto } from "../dto/response/peserta.response";
+import { serialisasi } from "../utils/serialisasi";
 
 export const getSemuaPeserta = asyncHandler(async (req: Request, res: Response) => {
     const query = ambilDto<ListPesertaQueryDto>(req, "query");
-
     const { data, total } = await pesertaService.daftarPeserta(query, {
         sekolah: query.sekolah,
         fase: query.fase,
     });
-
-    suksesDenganMeta(res, data, buatMeta(query.page, query.limit, total));
+    suksesDenganMeta(res, serialisasi(PesertaResponseDto, data), buatMeta(query.page, query.limit, total));
 });
 
 export const getPesertaById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = ambilDto<IdParamDto>(req, "params");
     const data = await pesertaService.ambilById(id);
-    sukses(res, data);
+    sukses(res, serialisasi(PesertaResponseDto, data));
 });
 
 export const buatPeserta = asyncHandler(async (req: Request, res: Response) => {
@@ -47,7 +47,7 @@ export const hapusPeserta = asyncHandler(async (req: Request, res: Response) => 
 export const getProfilSaya = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const data = await pesertaService.ambilById(userId);
-    sukses(res, data);
+    sukses(res, serialisasi(PesertaResponseDto, data));
 });
 
 export const getJurnalPeserta = asyncHandler(async (req: Request, res: Response) => {

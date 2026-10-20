@@ -39,6 +39,9 @@ export class Peserta {
     @Column({ type: "varchar", default: "", select: false })
     password!: string;
 
+    //@Column({ type: "varchar", default: "" })
+    //password!: string;
+
     @Column({ type: "varchar", default: "peserta" })
     role!: "peserta" | "mentor";
 

@@ -71,19 +71,26 @@ export const jurnalService = {
         });
     },
 
-    async buat(data: { pesertaId: number; kegiatan: string; hambatan?: string; linkCommit?: string }): Promise<JurnalHarian> {
-        const peserta = await pesertaRepo.findOneBy({ id: data.pesertaId });
-        if (!peserta) throw new NotFoundError("Peserta");
+    async buat(data: {
+    pesertaId: number;
+    kegiatan: string;
+    hambatan?: string;
+    linkCommit?: string;
+    lampiran?: { url: string; keterangan?: string }[];
+}): Promise<JurnalHarian> {
+    const peserta = await pesertaRepo.findOneBy({ id: data.pesertaId });
+    if (!peserta) throw new NotFoundError("Peserta");
 
-        const baru = repo.create({
-            pesertaId: data.pesertaId,
-            kegiatan: data.kegiatan,
-            hambatan: data.hambatan,
-            linkCommit: data.linkCommit,
-            statusReview: "belum",
-        });
-        return repo.save(baru);
-    },
+    const baru = repo.create({
+        pesertaId: data.pesertaId,
+        kegiatan: data.kegiatan,
+        hambatan: data.hambatan,
+        linkCommit: data.linkCommit,
+        lampiran: data.lampiran,
+        statusReview: "belum",
+    });
+    return repo.save(baru);
+},
 
     async update(id: number, data: Partial<JurnalHarian>, userId: number, userRole: string): Promise<JurnalHarian> {
         const jurnal = await repo.findOneBy({ id });
@@ -97,12 +104,15 @@ export const jurnalService = {
         return repo.save(jurnal);
     },
 
-    async review(id: number, status: "belum" | "sudah"): Promise<JurnalHarian> {
-        const jurnal = await repo.findOneBy({ id });
-        if (!jurnal) throw new NotFoundError("Jurnal");
-        jurnal.statusReview = status;
-        return repo.save(jurnal);
-    },
+    async review(id: number, status: "belum" | "sudah", catatan?: string): Promise<JurnalHarian> {
+    const jurnal = await repo.findOneBy({ id });
+    if (!jurnal) throw new NotFoundError("Jurnal");
+    jurnal.statusReview = status;
+    if (catatan !== undefined) {
+        jurnal.catatanMentor = catatan;
+    }
+    return repo.save(jurnal);
+ },
 
     async hapus(id: number): Promise<void> {
         const jurnal = await repo.findOneBy({ id });

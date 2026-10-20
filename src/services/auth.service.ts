@@ -20,18 +20,23 @@ interface LoginInput {
     password: string;
 }
 
-export async function register(data: RegisterInput) {
-    const sudahAda = await repo.findOneBy({ email: data.email });
+export async function register(data: RegisterInput & { konfirmasiPassword?: string }) {
+    
+    const { konfirmasiPassword, ...dataPeserta } = data;
+
+    // Cek email duplikat
+    const sudahAda = await repo.findOneBy({ email: dataPeserta.email });
     if (sudahAda) {
         throw new ConflictError("Email sudah terdaftar");
     }
 
-    const passwordHash = await hashPassword(data.password);
+    // Hash password
+    const passwordHash = await hashPassword(dataPeserta.password);
 
     const peserta = repo.create({
-        nama: data.nama,
-        sekolah: data.sekolah,
-        email: data.email,
+        nama: dataPeserta.nama,
+        sekolah: dataPeserta.sekolah,
+        email: dataPeserta.email,
         password: passwordHash,
         role: "peserta",
     });

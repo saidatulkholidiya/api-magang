@@ -44,6 +44,12 @@ export class JurnalHarian {
     @Column({ name: "reviewer_id", type: "int", nullable: true })
     reviewerId?: number;
 
+    @Column({ type: "text", nullable: true })
+    catatanMentor?: string;
+
+    @Column({ type: "jsonb", nullable: true })
+lampiran?: { url: string; keterangan?: string }[];
+
     @CreateDateColumn()
     createdAt!: Date;
 }

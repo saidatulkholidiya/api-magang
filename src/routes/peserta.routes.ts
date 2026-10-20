@@ -9,7 +9,7 @@ import { IdParamDto } from "../dto/common.dto";
 
 const router = Router();
 
-// STATIS
+// STATIS — menggunakan validasi query
 router.get("/", validasi(ListPesertaQueryDto, "query"), pesertaController.getSemuaPeserta);
 router.post("/", validasi(RegisterDto), pesertaController.buatPeserta);
 
