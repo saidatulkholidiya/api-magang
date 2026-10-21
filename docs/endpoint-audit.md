@@ -86,3 +86,30 @@
 | GET | /api/v1/stats | ❌ | - | 200 |
 | GET | /api/v1/health | ❌ | - | 200 |
 | GET | /api/v1/health/ready | ❌ | - | 200/503 |
+
+## Audit DTO Minggu 14
+
+| Method | Endpoint | DTO Body | DTO Query | DTO Params |
+|--------|----------|----------|-----------|------------|
+| POST | /api/v1/auth/register | RegisterDto | - | - |
+| POST | /api/v1/auth/login | LoginDto | - | - |
+| POST | /api/v1/auth/refresh | - (manual) | - | - |
+| POST | /api/v1/auth/logout | - (manual) | - | - |
+| GET | /api/v1/me | - | - | - |
+| PATCH | /api/v1/me | UpdateProfilDto | - | - |
+| GET | /api/v1/peserta | - | ListPesertaQueryDto | - |
+| GET | /api/v1/peserta/:id | - | - | IdParamDto |
+| POST | /api/v1/peserta | RegisterDto | - | - |
+| PATCH | /api/v1/peserta/:id | UpdateProfilDto | - | IdParamDto |
+| DELETE | /api/v1/peserta/:id | - | - | IdParamDto |
+| GET | /api/v1/peserta/:id/jurnal | - | - | IdParamDto |
+| GET | /api/v1/jurnal | - | ListJurnalQueryDto | - |
+| GET | /api/v1/jurnal/saya | - | - | - |
+| GET | /api/v1/jurnal/:id | - | - | IdParamDto |
+| POST | /api/v1/jurnal | CreateJurnalDto | - | - |
+| PATCH | /api/v1/jurnal/:id | UpdateJurnalDto | - | IdParamDto |
+| PATCH | /api/v1/jurnal/:id/review | ReviewJurnalDto | - | IdParamDto |
+| DELETE | /api/v1/jurnal/:id | - | - | IdParamDto |
+| GET | /api/v1/stats | - | - | - |
+| GET | /api/v1/health | - | - | - |
+| GET | /api/v1/health/ready | - | - | - |

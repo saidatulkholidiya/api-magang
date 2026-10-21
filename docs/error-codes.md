@@ -11,6 +11,7 @@
 | NOT_FOUND | 404 | Data/route tidak ada |
 | CONFLICT | 409 | Data duplikat |
 | RATE_LIMITED | 429 | Terlalu banyak request |
+| PAYLOAD_TOO_LARGE | 413 | Body request terlalu besar |
 | INTERNAL_ERROR | 500 | Bug di server |
 
 ## Format Error

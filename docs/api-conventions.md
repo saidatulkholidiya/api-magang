@@ -119,3 +119,16 @@ Meta di response: page, limit, total, totalPages, hasNext, hasPrev
 | GET | /api/v1/stats | ❌ | - | 200 |
 | GET | /api/v1/health | ❌ | - | 200 |
 | GET | /api/v1/health/ready | ❌ | - | 200/503 |
+
+## 9. Validasi dengan DTO (Minggu 14)
+
+- Semua input (body, query, params) divalidasi pakai DTO (class-validator).
+- Body memakai `whitelist: true` + `forbidNonWhitelisted: true`.
+- Query dan params memakai `@Type(() => Number)` untuk konversi angka.
+- Email dinormalkan: `@Trim()` + `@KeHurufKecil()`.
+- Field yang gak boleh diisi lewat body: `id`, `role`, `password`, `pesertaId`.
+- Response memakai Response DTO (`@Expose()`).
+- Validasi gagal → **422**.
+- Body JSON rusak → **400 INVALID_JSON**.
+- Body terlalu besar → **413 PAYLOAD_TOO_LARGE**.
+- Properti asing ditolak → **422**.

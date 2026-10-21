@@ -42,6 +42,25 @@ function terjemahkanError(err: unknown): AppError {
         return new AppError("Format JSON pada body tidak valid", 400, ErrorCode.INVALID_JSON);
     }
 
+    // Cek entity.too.large (cara standar)
+    if (
+        typeof err === "object" &&
+        err !== null &&
+        (err as { type?: string }).type === "entity.too.large"
+    ) {
+        return new AppError("Ukuran request terlalu besar", 413, ErrorCode.PAYLOAD_TOO_LARGE);
+    }
+
+    // Fallback: cek lewat err.name (Express 5 / body-parser)
+    if (err instanceof Error && err.name === "PayloadTooLargeError") {
+        return new AppError("Ukuran request terlalu besar", 413, ErrorCode.PAYLOAD_TOO_LARGE);
+    }
+
+    // Fallback: cek lewat err.status
+    if (typeof err === "object" && err !== null && (err as { status?: number }).status === 413) {
+        return new AppError("Ukuran request terlalu besar", 413, ErrorCode.PAYLOAD_TOO_LARGE);
+    }
+
     return new AppError("Terjadi kesalahan di server", 500, ErrorCode.INTERNAL_ERROR);
 }
 

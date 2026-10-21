@@ -8,6 +8,7 @@ export const ErrorCode = {
     NOT_FOUND: "NOT_FOUND",
     CONFLICT: "CONFLICT",
     RATE_LIMITED: "RATE_LIMITED",
+    PAYLOAD_TOO_LARGE: "PAYLOAD_TOO_LARGE",
     INTERNAL_ERROR: "INTERNAL_ERROR",
 } as const;
 
