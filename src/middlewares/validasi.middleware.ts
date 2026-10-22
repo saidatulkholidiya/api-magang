@@ -1,10 +1,7 @@
 import { Request, RequestHandler } from "express";
-import { ClassConstructor, plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
+import { ClassConstructor } from "class-transformer";
 import { ValidationError } from "../utils/AppError";
-import { ratakan } from "../utils/validasi.util";
-
-type Sumber = "body" | "query" | "params";
+import { validasiDto, Sumber } from "../utils/validasi.util";
 
 export function validasi<T extends object>(
     dto: ClassConstructor<T>,
@@ -22,27 +19,7 @@ export function validasi<T extends object>(
                 mentah = req.body ?? {};
             }
 
-            if (typeof mentah !== "object" || mentah === null || Array.isArray(mentah)) {
-                throw new ValidationError([
-                    { field: sumber, pesan: `${sumber} harus berupa objek` },
-                ]);
-            }
-
-            const instance = plainToInstance(dto, mentah as Record<string, unknown>, {
-                exposeDefaultValues: true,
-                enableImplicitConversion: true,
-                });
-
-            const errors = await validate(instance, {
-                whitelist: true,
-                forbidNonWhitelisted: sumber === "body",
-                validationError: { target: false, value: false },
-            });
-
-            if (errors.length > 0) {
-                throw new ValidationError(ratakan(errors));
-            }
-
+            const instance = await validasiDto(dto, mentah, sumber);
             req.validated = { ...req.validated, [sumber]: instance };
             next();
         } catch (err) {

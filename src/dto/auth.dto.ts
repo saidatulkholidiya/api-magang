@@ -41,7 +41,7 @@ export class RegisterDto {
     email!: string;
 
     @IsString({ message: "Password harus berupa teks" })
-    @MinLength(8, { message: "Password minimal 8 karakter" })
+    @MinLength(8, { message: "Password minimal 8 karakter" })   
     @MaxLength(72, { message: "Password maksimal 72 karakter" })
     @Matches(/^(?=.*[A-Za-z])(?=.*\d).+$/, {
         message: "Password harus mengandung huruf dan angka",

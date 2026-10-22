@@ -1,4 +1,5 @@
 /// <reference types="jest" />
+/// <reference types="node" />
 beforeAll(() => {
     if (process.env.LOG_TEST === "1") return;
     jest.spyOn(console, "log").mockImplementation(() => undefined);
