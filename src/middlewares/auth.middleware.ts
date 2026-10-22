@@ -14,11 +14,9 @@ export function authGuard(req: Request, res: Response, next: NextFunction): void
         throw new UnauthorizedError("Token tidak valid");
     }
 
-    try {
-        const payload = verifikasiAccessToken(token);
-        req.user = payload;
-        next();
-    } catch (err) {
-        throw new UnauthorizedError("Token tidak valid atau sudah kedaluwarsa");
-    }
+    // Biarkan TokenExpiredError / JsonWebTokenError naik ke errorHandler.
+    // errorHandler sudah menerjemahkannya menjadi TOKEN_EXPIRED / INVALID_TOKEN.
+    const payload = verifikasiAccessToken(token);
+    req.user = payload;
+    next();
 }

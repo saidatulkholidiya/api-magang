@@ -9,6 +9,7 @@ export const loginLimiter = rateLimit({
     limit: 10,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === "test" && process.env.RATE_LIMIT_AKTIF !== "1",
     handler: (_req, _res, next) => {
         next(new AppError("Terlalu banyak percobaan, coba lagi nanti", 429, ErrorCode.RATE_LIMITED));
     },
@@ -20,6 +21,10 @@ const LIMIT = 10;
 const WINDOW = 60 * 1000;
 
 export function rateLimiter(req: Request, res: Response, next: NextFunction): void {
+    if (process.env.NODE_ENV === "test" && process.env.RATE_LIMIT_AKTIF !== "1") {
+    next();
+    return;
+}
     const ip = req.ip || "unknown";
     const sekarang = Date.now();
 
