@@ -392,3 +392,7 @@ Proyek ini menggunakan Express versi 5.2.1. Ada beberapa hal yang berbeda dari v
 1. `req.query` bersifat hanya-baca, sehingga tidak dapat ditimpa. Oleh karena itu, hasil validasi saya simpan di `req.validated`.
 2. `req.body` bernilai `undefined` apabila permintaan tidak memiliki body, bukan berupa objek kosong. Middleware perlu menangani kondisi ini.
 3. Sintaks path route mengalami perubahan. Pola regex seperti `/:id(\d+)` dan parameter opsional `/:bulan?` sudah tidak didukung lagi.
+
+## Refleksi — Menguji Perilaku, Bukan Implementasi
+
+Test yang baik memeriksa **apa yang terjadi** (hasil, error yang dilempar, efek samping), bukan **bagaimana caranya** (method apa yang dipanggil, argumen persisnya). Contoh terlalu detail: `expect(repo.findOne).toHaveBeenCalledWith({ where: { id: 1 }, relations: { jurnalList: true, skills: true } })` — test ini patah setiap kali cara query diubah, padahal perilakunya sama. Versi sehatnya: `expect(hasil).toEqual(peserta)` dan `expect(repo.save).not.toHaveBeenCalled()` saat email duplikat — memeriksa hasil akhir dan efek penting, bukan rantai pemanggilan.
