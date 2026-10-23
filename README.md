@@ -396,3 +396,79 @@ Proyek ini menggunakan Express versi 5.2.1. Ada beberapa hal yang berbeda dari v
 ## Refleksi — Menguji Perilaku, Bukan Implementasi
 
 Test yang baik memeriksa **apa yang terjadi** (hasil, error yang dilempar, efek samping), bukan **bagaimana caranya** (method apa yang dipanggil, argumen persisnya). Contoh terlalu detail: `expect(repo.findOne).toHaveBeenCalledWith({ where: { id: 1 }, relations: { jurnalList: true, skills: true } })` — test ini patah setiap kali cara query diubah, padahal perilakunya sama. Versi sehatnya: `expect(hasil).toEqual(peserta)` dan `expect(repo.save).not.toHaveBeenCalled()` saat email duplikat — memeriksa hasil akhir dan efek penting, bukan rantai pemanggilan.
+
+## Cara Menjalankan Test
+
+**1. Persiapan Awal (Instalasi Dependency)**
+Sebelum menjalankan test, pastikan semua library yang dibutuhkan sudah terpasang di dalam project. Jika belum, jalankan perintah:
+```bash
+npm install
+
+**2. Unit & HTTP Test (Cepat, Tanpa Database)**
+Pengujian ini berfokus pada logika fungsi, validasi DTO, controller, dan kontrak API menggunakan mock (tanpa koneksi database asli).
+Perintah:
+
+bash
+npm test
+Output Terminal:
+
+text
+> api-magang@1.0.0 test
+> jest
+
+Test Suites: 15 passed, 15 total
+Tests:       180 passed, 180 total
+Snapshots:   0 total
+Time:        13.509 s
+Ran all test suites.
+**3. Test Coverage (Melihat Persentase Kode yang Teruji)**
+Pengujian ini dijalankan untuk melihat seberapa besar kode yang sudah tercakup oleh test, sekaligus memastikan angka tersebut lolos dari batas minimal (threshold) yang ditetapkan sebesar 60%.
+Perintah:
+
+bash
+npm run test:coverage
+Output Terminal:
+
+text
+> api-magang@1.0.0 test:coverage
+> jest --coverage
+
+Test Suites: 15 passed, 15 total
+Tests:       180 passed, 180 total
+Snapshots:   0 total
+Time:        19.796 s
+Ran all test suites.
+All files        80.66 |    68.05 |   65.69 |   81.26 |  
+
+**4. Integration Test (Membutuhkan Database Asli)**
+Pengujian ini memastikan alur aplikasi berjalan dengan baik saat terhubung langsung ke database PostgreSQL. Test ini akan menghapus dan membuat ulang skema database dari nol menggunakan migration.
+Langkah pertama, pastikan service PostgreSQL menyala dan buat database khusus test (jika belum ada):
+
+bash
+psql -U postgres -c "CREATE DATABASE magang_test;"
+Langkah kedua, jalankan perintah test integrasi:
+
+bash
+npm run test:int
+Output Terminal:
+
+text
+> api-magang@1.0.0 test:int
+> jest --config jest.integration.config.ts --runInBand
+
+PASS  tests/integration/auth-flow.test.ts
+  Alur autentikasi lengkap (database sungguhan)
+    √ register, login, akses /me, tolak mass assignment, refresh, logout, refresh ditolak (330 ms)
+    √ menolak email duplikat walau beda huruf besar dan spasi (409) (137 ms)
+    √ dua register bersamaan dengan email sama: satu 201, satu 409 (UNIQUE constraint) (196 ms)
+
+PASS  tests/integration/peserta-jurnal.test.ts
+  Alur peserta & jurnal (database sungguhan)
+    √ GET /peserta dengan 15 data: pagination dan filter bekerja
+    √ DELETE /peserta/:id yang masih punya jurnal — perilaku ON DELETE
+
+Test Suites: 2 passed, 2 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        5.157 s
+Ran all test suites.
