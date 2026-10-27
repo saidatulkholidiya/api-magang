@@ -11,27 +11,42 @@ import { config } from "./config/env.config";
 import { AppError } from "./utils/AppError";
 import { ErrorCode } from "./utils/errorCodes";
 
+// Import Swagger
+import swaggerUi from "swagger-ui-express";
+import { spec } from "./docs/swagger";
+
 const app: Application = express();
 
 app.use(requestId);
+
+// 1. DAFTARKAN SWAGGER PALING AWAL (SETELAH REQUEST ID)
+    app.get("/api/docs.json", (_req: Request, res: Response) => {
+        res.json(spec);
+    });
+
+    app.use(
+        "/api/docs",
+        helmet({ contentSecurityPolicy: false }),
+        swaggerUi.serve,
+        swaggerUi.setup(spec, {
+            customSiteTitle: "API Magang Batch 4 — Dokumentasi",
+            swaggerOptions: { persistAuthorization: true, docExpansion: "list" },
+        })
+    );
+
+
+// 2. MIDDLEWARE GLOBAL
 app.use(helmet());
 app.use(cors({
     origin: config.cors.origins,
     credentials: true,
 }));
 
-// express.json() — tangkap error DULU sebelum ke routes
 const jsonParser = express.json({ limit: "1mb" });
-
 app.use((req: Request, res: Response, next: NextFunction) => {
     jsonParser(req, res, (err: any) => {
         if (err) {
-            if (
-                err?.type === "entity.too.large" ||
-                err?.name === "PayloadTooLargeError" ||
-                err?.status === 413 ||
-                err?.statusCode === 413
-            ) {
+            if (err?.type === "entity.too.large" || err?.name === "PayloadTooLargeError" || err?.status === 413 || err?.statusCode === 413) {
                 return next(new AppError("Ukuran request terlalu besar", 413, ErrorCode.PAYLOAD_TOO_LARGE));
             }
             if (err?.type === "entity.parse.failed") {
@@ -45,8 +60,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use(requestLogger);
 app.use("/api/v1", rateLimiter);
+
+// 3. RUTE APLIKASI
 app.use("/api/v1", healthRoutes);
 app.use("/api/v1", routes);
+
+// 4. HANDLER ERROR (PALING BAWAH)
 app.use(notFoundHandler);
 app.use(errorHandler);
 

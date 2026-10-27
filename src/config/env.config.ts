@@ -36,6 +36,10 @@ export const config = {
     cors: {
         origins: opsional("CORS_ORIGINS", "http://localhost:5173").split(","),
     },
+    docs: {
+        enabled: opsional("DOCS_ENABLED", process.env.NODE_ENV === "production" ? "false" : "true") === "true",
+    },
 } as const;
 
 export const isDev = config.app.env === "development";
+export const isProd = config.app.env === "production"; 
