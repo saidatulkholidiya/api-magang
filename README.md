@@ -472,3 +472,21 @@ Tests:       5 passed, 5 total
 Snapshots:   0 total
 Time:        5.157 s
 Ran all test suites.
+
+## Konsep OpenAPI dan Swagger (Minggu 16 - Senin)
+
+OpenAPI adalah **spesifikasi** atau standar format (berupa JSON/YAML) untuk mendeskripsikan bentuk REST API. Sedangkan Swagger adalah **kumpulan alat** (tools) yang menggunakan standar OpenAPI tersebut, salah satunya adalah Swagger UI yang mengubah dokumen menjadi halaman web interaktif yang bisa dicoba langsung.
+
+Dokumen API tetap perlu dibuat meskipun kita sendiri yang menulis seluruh kodenya karena dokumentasi berfungsi sebagai **kontrak yang jelas** antara backend dan frontend. Frontend tidak perlu lagi menebak-nebak bentuk respons atau membuka kode backend untuk tahu cara memanggil API. Selain itu, dokumentasi yang baik memudahkan pengujian (QA) dan memastikan tidak ada kesalahan komunikasi saat fitur baru ditambahkan di masa depan.
+
+## Terjemahan DTO ke OpenAPI (Minggu 16 - Selasa)
+
+Berikut adalah contoh sinkronisasi aturan dari DTO (class-validator) ke dalam skema dokumentasi OpenAPI:
+1. `@MinLength(10)` pada DTO kegiatan → `minLength: 10` pada CreateJurnalRequest.
+2. `@IsIn(["belum", "sudah"])` pada DTO statusReview → `enum: ["belum", "sudah"]` pada ReviewJurnalRequest.
+3. `@IsUrl()` pada DTO linkCommit → `type: "string", format: "uri"` pada Jurnal.## Terjemahan DTO ke OpenAPI (Minggu 16 - Selasa)
+
+Berikut adalah contoh sinkronisasi aturan dari DTO (class-validator) ke dalam skema dokumentasi OpenAPI:
+1. `@MinLength(10)` pada DTO kegiatan → `minLength: 10` pada CreateJurnalRequest.
+2. `@IsIn(["belum", "sudah"])` pada DTO statusReview → `enum: ["belum", "sudah"]` pada ReviewJurnalRequest.
+3. `@IsUrl()` pada DTO linkCommit → `type: "string", format: "uri"` pada Jurnal.

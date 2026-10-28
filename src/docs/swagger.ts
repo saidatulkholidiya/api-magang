@@ -1,5 +1,6 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import { config, isProd } from "../config/env.config";
+import { components } from "./components";
 
 export const spec = swaggerJSDoc({
   failOnErrors: true,
@@ -21,6 +22,8 @@ export const spec = swaggerJSDoc({
       { name: "Jurnal", description: "Jurnal harian dan proses review mentor" },
       { name: "Sistem", description: "Health check" },
     ],
+    components: components as never,
+    security: [{ bearerAuth: [] }],
   },
   // Memindai folder routes untuk mencari anotasi @openapi
   apis: isProd ? ["./dist/routes/*.js"] : ["./src/routes/*.ts"],

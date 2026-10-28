@@ -19,7 +19,7 @@ const app: Application = express();
 
 app.use(requestId);
 
-// 1. DAFTARKAN SWAGGER PALING AWAL (SETELAH REQUEST ID)
+// 1. SWAGGER 
     app.get("/api/docs.json", (_req: Request, res: Response) => {
         res.json(spec);
     });
@@ -65,7 +65,7 @@ app.use("/api/v1", rateLimiter);
 app.use("/api/v1", healthRoutes);
 app.use("/api/v1", routes);
 
-// 4. HANDLER ERROR (PALING BAWAH)
+// 4. HANDLER ERROR 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
