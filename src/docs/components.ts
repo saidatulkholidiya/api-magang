@@ -42,6 +42,24 @@ export const components = {
         hasNext: { type: "boolean", example: true },
         hasPrev: { type: "boolean", example: false },
       },
+          UpdateProfilRequest: {
+      type: "object",
+      additionalProperties: false,
+      description: "Hanya boleh berisi nama, sekolah, atau telepon. Minimal satu field harus diisi.",
+      properties: {
+        nama: { type: "string", minLength: 3, maxLength: 100 },
+        sekolah: { type: "string", minLength: 3, maxLength: 100 },
+        telepon: { type: "string", pattern: "^(\\+62|62|0)8[1-9][0-9]{6,10}$" },
+      },
+    },
+
+    RefreshRequest: {
+      type: "object",
+      required: ["refreshToken"],
+      additionalProperties: false,
+      properties: {
+        refreshToken: { type: "string" },
+      },
     },
 
     FieldError: {
@@ -198,4 +216,4 @@ export const components = {
       default: { summary: "Rate limit", value: contohError("RATE_LIMITED", "Coba lagi nanti") },
     }),
   },
-};
+}};

@@ -490,3 +490,20 @@ Berikut adalah contoh sinkronisasi aturan dari DTO (class-validator) ke dalam sk
 1. `@MinLength(10)` pada DTO kegiatan → `minLength: 10` pada CreateJurnalRequest.
 2. `@IsIn(["belum", "sudah"])` pada DTO statusReview → `enum: ["belum", "sudah"]` pada ReviewJurnalRequest.
 3. `@IsUrl()` pada DTO linkCommit → `type: "string", format: "uri"` pada Jurnal.
+
+## Terjemahan DTO ke OpenAPI
+
+Berikut adalah sinkronisasi aturan validasi dari DTO (class-validator) ke dalam skema dokumentasi OpenAPI:
+
+| Decorator DTO (class-validator) | Keyword OpenAPI (Swagger) |
+|---|---|
+| `@IsString()` | `type: string` |
+| `@IsEmail()` | `type: string, format: email` |
+| `@MinLength(10)` | `minLength: 10` |
+| `@MaxLength(200)` | `maxLength: 200` |
+| `@Min(1)` / `@Max(5)` | `minimum: 1` / `maximum: 5` |
+| `@IsIn(["belum", "sudah"])` | `enum: ["belum", "sudah"]` |
+| `@IsUrl()` | `type: string, format: uri` |
+| `@IsBoolean()` | `type: boolean` |
+| `@IsOptional()` | Properti tidak dimasukkan ke array `required` |
+| `@ValidateNested()` | Menggunakan `$ref` ke schema lain |
