@@ -182,14 +182,29 @@ export const components = {
       },
     },
 
-    ReviewJurnalRequest: {
-      type: "object",
-      required: ["statusReview"],
-      additionalProperties: false,
-      properties: {
-        statusReview: { type: "string", enum: ["belum", "sudah"] },
-        catatan: { type: "string", minLength: 5, description: "Wajib jika statusReview='sudah'" },
-      },
+        ReviewJurnalRequest: {
+      oneOf: [
+        {
+          type: "object",
+          title: "Ditandai sudah direview (catatan wajib)",
+          required: ["statusReview", "catatan"],
+          additionalProperties: false,
+          properties: {
+            statusReview: { type: "string", enum: ["sudah"] },
+            catatan: { type: "string", minLength: 5, example: "Sudah bagus, lanjutkan." },
+          },
+        },
+        {
+          type: "object",
+          title: "Dikembalikan ke belum direview (catatan opsional)",
+          required: ["statusReview"],
+          additionalProperties: false,
+          properties: {
+            statusReview: { type: "string", enum: ["belum"] },
+            catatan: { type: "string", minLength: 5 },
+          },
+        },
+      ],
     },
 
     JurnalResponse: bungkusSukses(ref("Jurnal")),
