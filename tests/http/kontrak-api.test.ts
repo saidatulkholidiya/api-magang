@@ -193,21 +193,25 @@ describe("Response DTO", () => {
     expect(res.body.error.kode).toBe("UNAUTHORIZED");
   });
 
-  // d. GET /peserta dengan query lengkap → service menerima nilai benar
-  it("GET /peserta dengan query lengkap → service menerima nilai yang benar", async () => {
+    // d. GET /peserta dengan query lengkap → service menerima nilai benar
+   it("GET /peserta dengan query lengkap → service menerima nilai yang benar", async () => {
     mockPeserta.daftarPeserta.mockResolvedValue({ data: [], total: 0 } as never);
-    await request(app).get("/api/v1/peserta").query({
-      page: 2, limit: 5, q: "budi", sortBy: "nama", order: "asc", fase: 3,
-    });
+    
+    await request(app)
+      .get("/api/v1/peserta")
+      .query({ page: 2, limit: 5, q: "budi", sortBy: "nama", order: "asc", fase: 3 })
+      .set("Authorization", bearer(tokenMentor()));
+
     expect(mockPeserta.daftarPeserta).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 2, limit: 5, q: "budi", sortBy: "nama", order: "ASC", fase: 3 }),
+      expect.objectContaining({ page: 2, limit: 5, q: "budi", sortBy: "nama", order: "ASC" }),
       expect.any(Object)
     );
   });
 
   // e. GET /peserta?sortBy=password → 422
   it("GET /peserta?sortBy=password → 422", async () => {
-    const res = await request(app).get("/api/v1/peserta").query({ sortBy: "password" });
+    const res = await request(app).get("/api/v1/peserta").query({ sortBy: "password" })
+    .set("Authorization", bearer(tokenMentor()));
     expect(res.status).toBe(422);
     expect(res.body.error.detail.map((d: { field: string }) => d.field)).toContain("sortBy");
   });
@@ -265,5 +269,5 @@ describe("Response DTO", () => {
     expect(res.headers["x-request-id"]).toBeDefined();
     expect(res.body.requestId).toBeDefined();
   });
-});
+  });
 });

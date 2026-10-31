@@ -1,428 +1,53 @@
 # API Magang Batch 4
 
-## Setup Database dari Nol
+![Test](https://github.com/saidatulkholidiya/api-magang/actions/workflows/test.yml/badge.svg)
 
-1. Install PostgreSQL 16.
-2. Buat database: CREATE DATABASE magang_db;
-3. Jalankan migration: npm run migration:run
-4. Jalankan server: npm run dev
+REST API untuk program magang PT Nawasena Insan Permata. Proyek ini dibangun dari nol menggunakan Node.js, Express, TypeScript, dan PostgreSQL, dilengkapi dengan pengujian otomatis (Unit, HTTP, Integration) serta dokumentasi interaktif (Swagger).
 
-## Endpoint Auth
+## Teknologi yang Digunakan
+- Runtime & Bahasa: Node.js + TypeScript
+- Framework Web: Express.js (v5)
+- Database & ORM: PostgreSQL + TypeORM
+- Testing: Jest, Supertest, Swagger Parser
+- Dokumentasi: Swagger UI (OpenAPI 3.0)
+- Keamanan: JWT (Access & Refresh Token), Bcrypt (Hash Password), Helmet, CORS, Rate Limiter
 
-### POST /api/v1/auth/register
-
-Registrasi peserta baru.
-
-Body:
-
-    {
-      "nama": "Test Refresh",
-      "sekolah": "SMK Test",
-      "email": "testrefresh@example.com",
-      "password": "rahasia123"
-    }
-
-Response 201:
-
-    {
-      "sukses": true,
-      "pesan": "Registrasi berhasil",
-      "data": {
-        "id": 9,
-        "nama": "Test Refresh",
-        "email": "testrefresh@example.com",
-        "role": "peserta"
-      }
-    }
-
-### POST /api/v1/auth/login
-
-Login dan dapatkan access token beserta refresh token.
-
-Body:
-
-    {
-      "email": "testrefresh@example.com",
-      "password": "rahasia123"
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Login berhasil",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "peserta": {
-          "id": 9,
-          "nama": "Test Refresh",
-          "sekolah": "SMK Test",
-          "email": "testrefresh@example.com",
-          "fase": 1,
-          "status": "aktif",
-          "role": "peserta"
-        }
-      }
-    }
-
-### POST /api/v1/auth/refresh
-
-Tukar refresh token dengan access token baru.
-
-Body:
-
-    {
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Access token berhasil diperbarui",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      }
-    }
-
-### POST /api/v1/auth/logout
-
-Hapus refresh token dari database.
-
-Body:
-
-    {
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Logout berhasil"
-    }
-
-## Kenapa DELETE Harus Idempotent
-
-DELETE harus idempotent karena kalau kita menghapus data yang sama berkali-kali, hasilnya tetap sama, yaitu data tersebut terhapus. Hal ini membuat sistem menjadi lebih terprediksi, sehingga client bisa mencoba ulang permintaan DELETE tanpa khawatir menimbulkan efek ganda. Berbeda dengan POST yang akan membuat data baru setiap kali dipanggil.
-
-## Kenapa Tidak Boleh Menghapus Lewat GET
-
-GET harus selalu bersifat "safe", artinya tidak mengubah data apa pun. Apabila ada endpoint seperti GET /peserta/1/hapus, browser atau crawler bisa memanggilnya secara otomatis (misalnya melalui prefetch atau cache) tanpa kita sadari. Akibatnya data bisa terhapus tanpa ada yang menekan tombol apa pun. Itulah sebabnya aksi yang mengubah data harus menggunakan POST, PUT, PATCH, atau DELETE.
-
-## Perbedaan Entity dan DTO
-
-Entity adalah bentuk tabel yang ada di database. Field-nya lengkap, mulai dari id, password, sampai waktu pembuatan data. Satu entity mewakili satu tabel.
-
-DTO adalah bentuk data yang diizinkan masuk atau keluar dari API. Field-nya hanya yang relevan untuk kebutuhan tertentu. Satu entity bisa memiliki beberapa DTO, misalnya untuk pendaftaran, pembaruan, dan respons.
-
-Entity Peserta tidak sebaiknya dipakai langsung sebagai bentuk data pendaftaran, karena tiga alasan berikut:
-
-1. Pengguna bisa saja mengirim field yang tidak seharusnya, seperti `role` atau `id`.
-2. Data password yang sudah di-hash bisa ikut terkirim di respons jika kurang berhati-hati.
-3. Apabila struktur database berubah, kontrak API akan langsung terganggu.
-
-## Perbedaan Express 5
-
-Proyek ini menggunakan Express versi 5.2.1. Ada beberapa hal yang berbeda dari versi sebelumnya:
-
-1. `req.query` bersifat hanya-baca, sehingga tidak dapat ditimpa. Oleh karena itu, hasil validasi saya simpan di `req.validated`.
-2. `req.body` bernilai `undefined` apabila permintaan tidak memiliki body, bukan berupa objek kosong. Middleware perlu menangani kondisi ini.
-3. Sintaks path route mengalami perubahan. Pola regex seperti `/:id(\d+)` dan parameter opsional `/:bulan?` sudah tidak didukung lagi.# API Magang Batch 4
+## Alamat Dokumentasi API
+Dokumentasi interaktif dapat diakses di: **`http://localhost:3000/api/docs/`**
+Ekspor dokumen OpenAPI (JSON): **`http://localhost:3000/api/docs.json`**
 
 ## Setup Database dari Nol
-
-1. Install PostgreSQL 16.
-2. Buat database: CREATE DATABASE magang_db;
-3. Jalankan migration: npm run migration:run
-4. Jalankan server: npm run dev
-
-## Endpoint Auth
-
-### POST /api/v1/auth/register
-
-Registrasi peserta baru.
-
-Body:
-
-    {
-      "nama": "Test Refresh",
-      "sekolah": "SMK Test",
-      "email": "testrefresh@example.com",
-      "password": "rahasia123"
-    }
-
-Response 201:
-
-    {
-      "sukses": true,
-      "pesan": "Registrasi berhasil",
-      "data": {
-        "id": 9,
-        "nama": "Test Refresh",
-        "email": "testrefresh@example.com",
-        "role": "peserta"
-      }
-    }
-
-### POST /api/v1/auth/login
-
-Login dan dapatkan access token beserta refresh token.
-
-Body:
-
-    {
-      "email": "testrefresh@example.com",
-      "password": "rahasia123"
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Login berhasil",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "peserta": {
-          "id": 9,
-          "nama": "Test Refresh",
-          "sekolah": "SMK Test",
-          "email": "testrefresh@example.com",
-          "fase": 1,
-          "status": "aktif",
-          "role": "peserta"
-        }
-      }
-    }
-
-### POST /api/v1/auth/refresh
-
-Tukar refresh token dengan access token baru.
-
-Body:
-
-    {
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Access token berhasil diperbarui",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      }
-    }
-
-### POST /api/v1/auth/logout
-
-Hapus refresh token dari database.
-
-Body:
-
-    {
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Logout berhasil"
-    }
-
-## Kenapa DELETE Harus Idempotent
-
-DELETE harus idempotent karena kalau kita menghapus data yang sama berkali-kali, hasilnya tetap sama, yaitu data tersebut terhapus. Hal ini membuat sistem menjadi lebih terprediksi, sehingga client bisa mencoba ulang permintaan DELETE tanpa khawatir menimbulkan efek ganda. Berbeda dengan POST yang akan membuat data baru setiap kali dipanggil.
-
-## Kenapa Tidak Boleh Menghapus Lewat GET
-
-GET harus selalu bersifat "safe", artinya tidak mengubah data apa pun. Apabila ada endpoint seperti GET /peserta/1/hapus, browser atau crawler bisa memanggilnya secara otomatis (misalnya melalui prefetch atau cache) tanpa kita sadari. Akibatnya data bisa terhapus tanpa ada yang menekan tombol apa pun. Itulah sebabnya aksi yang mengubah data harus menggunakan POST, PUT, PATCH, atau DELETE.
-
-## Perbedaan Entity dan DTO
-
-Entity adalah bentuk tabel yang ada di database. Field-nya lengkap, mulai dari id, password, sampai waktu pembuatan data. Satu entity mewakili satu tabel.
-
-DTO adalah bentuk data yang diizinkan masuk atau keluar dari API. Field-nya hanya yang relevan untuk kebutuhan tertentu. Satu entity bisa memiliki beberapa DTO, misalnya untuk pendaftaran, pembaruan, dan respons.
-
-Entity Peserta tidak sebaiknya dipakai langsung sebagai bentuk data pendaftaran, karena tiga alasan berikut:
-
-1. Pengguna bisa saja mengirim field yang tidak seharusnya, seperti `role` atau `id`.
-2. Data password yang sudah di-hash bisa ikut terkirim di respons jika kurang berhati-hati.
-3. Apabila struktur database berubah, kontrak API akan langsung terganggu.
-
-## Perbedaan Express 5
-
-Proyek ini menggunakan Express versi 5.2.1. Ada beberapa hal yang berbeda dari versi sebelumnya:
-
-1. `req.query` bersifat hanya-baca, sehingga tidak dapat ditimpa. Oleh karena itu, hasil validasi saya simpan di `req.validated`.
-2. `req.body` bernilai `undefined` apabila permintaan tidak memiliki body, bukan berupa objek kosong. Middleware perlu menangani kondisi ini.
-3. Sintaks path route mengalami perubahan. Pola regex seperti `/:id(\d+)` dan parameter opsional `/:bulan?` sudah tidak didukung lagi.# API Magang Batch 4
-
-## Setup Database dari Nol
-
-1. Install PostgreSQL 16.
-2. Buat database: CREATE DATABASE magang_db;
-3. Jalankan migration: npm run migration:run
-4. Jalankan server: npm run dev
-
-## Endpoint Auth
-
-### POST /api/v1/auth/register
-
-Registrasi peserta baru.
-
-Body:
-
-    {
-      "nama": "Test Refresh",
-      "sekolah": "SMK Test",
-      "email": "testrefresh@example.com",
-      "password": "rahasia123"
-    }
-
-Response 201:
-
-    {
-      "sukses": true,
-      "pesan": "Registrasi berhasil",
-      "data": {
-        "id": 9,
-        "nama": "Test Refresh",
-        "email": "testrefresh@example.com",
-        "role": "peserta"
-      }
-    }
-
-### POST /api/v1/auth/login
-
-Login dan dapatkan access token beserta refresh token.
-
-Body:
-
-    {
-      "email": "testrefresh@example.com",
-      "password": "rahasia123"
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Login berhasil",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "peserta": {
-          "id": 9,
-          "nama": "Test Refresh",
-          "sekolah": "SMK Test",
-          "email": "testrefresh@example.com",
-          "fase": 1,
-          "status": "aktif",
-          "role": "peserta"
-        }
-      }
-    }
-
-### POST /api/v1/auth/refresh
-
-Tukar refresh token dengan access token baru.
-
-Body:
-
-    {
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Access token berhasil diperbarui",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      }
-    }
-
-### POST /api/v1/auth/logout
-
-Hapus refresh token dari database.
-
-Body:
-
-    {
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-
-Response 200:
-
-    {
-      "sukses": true,
-      "pesan": "Logout berhasil"
-    }
-
-## Kenapa DELETE Harus Idempotent
-
-DELETE harus idempotent karena kalau kita menghapus data yang sama berkali-kali, hasilnya tetap sama, yaitu data tersebut terhapus. Hal ini membuat sistem menjadi lebih terprediksi, sehingga client bisa mencoba ulang permintaan DELETE tanpa khawatir menimbulkan efek ganda. Berbeda dengan POST yang akan membuat data baru setiap kali dipanggil.
-
-## Kenapa Tidak Boleh Menghapus Lewat GET
-
-GET harus selalu bersifat "safe", artinya tidak mengubah data apa pun. Apabila ada endpoint seperti GET /peserta/1/hapus, browser atau crawler bisa memanggilnya secara otomatis (misalnya melalui prefetch atau cache) tanpa kita sadari. Akibatnya data bisa terhapus tanpa ada yang menekan tombol apa pun. Itulah sebabnya aksi yang mengubah data harus menggunakan POST, PUT, PATCH, atau DELETE.
-
-## Perbedaan Entity dan DTO
-
-Entity adalah bentuk tabel yang ada di database. Field-nya lengkap, mulai dari id, password, sampai waktu pembuatan data. Satu entity mewakili satu tabel.
-
-DTO adalah bentuk data yang diizinkan masuk atau keluar dari API. Field-nya hanya yang relevan untuk kebutuhan tertentu. Satu entity bisa memiliki beberapa DTO, misalnya untuk pendaftaran, pembaruan, dan respons.
-
-Entity Peserta tidak sebaiknya dipakai langsung sebagai bentuk data pendaftaran, karena tiga alasan berikut:
-
-1. Pengguna bisa saja mengirim field yang tidak seharusnya, seperti `role` atau `id`.
-2. Data password yang sudah di-hash bisa ikut terkirim di respons jika kurang berhati-hati.
-3. Apabila struktur database berubah, kontrak API akan langsung terganggu.
-
-## Perbedaan Express 5
-
-Proyek ini menggunakan Express versi 5.2.1. Ada beberapa hal yang berbeda dari versi sebelumnya:
-
-1. `req.query` bersifat hanya-baca, sehingga tidak dapat ditimpa. Oleh karena itu, hasil validasi saya simpan di `req.validated`.
-2. `req.body` bernilai `undefined` apabila permintaan tidak memiliki body, bukan berupa objek kosong. Middleware perlu menangani kondisi ini.
-3. Sintaks path route mengalami perubahan. Pola regex seperti `/:id(\d+)` dan parameter opsional `/:bulan?` sudah tidak didukung lagi.
-
-## Refleksi — Menguji Perilaku, Bukan Implementasi
-
-Test yang baik memeriksa **apa yang terjadi** (hasil, error yang dilempar, efek samping), bukan **bagaimana caranya** (method apa yang dipanggil, argumen persisnya). Contoh terlalu detail: `expect(repo.findOne).toHaveBeenCalledWith({ where: { id: 1 }, relations: { jurnalList: true, skills: true } })` — test ini patah setiap kali cara query diubah, padahal perilakunya sama. Versi sehatnya: `expect(hasil).toEqual(peserta)` dan `expect(repo.save).not.toHaveBeenCalled()` saat email duplikat — memeriksa hasil akhir dan efek penting, bukan rantai pemanggilan.
-
-## Cara Menjalankan Test
-
-**1. Persiapan Awal (Instalasi Dependency)**
-Sebelum menjalankan test, pastikan semua library yang dibutuhkan sudah terpasang di dalam project. Jika belum, jalankan perintah:
-```bash
-npm install
-
-**2. Unit & HTTP Test (Cepat, Tanpa Database)**
-Pengujian ini berfokus pada logika fungsi, validasi DTO, controller, dan kontrak API menggunakan mock (tanpa koneksi database asli).
+1. Pastikan PostgreSQL 16 sudah terinstal dan berjalan.
+2. Buat database utama: `CREATE DATABASE magang_db;`
+3. Buat database khusus untuk testing: `CREATE DATABASE magang_test;`
+4. Jalankan migrasi tabel: `npm run migration:run`
+5. Jalankan server: `npm run dev`
+6. Buka dokumentasi Swagger di: `http://localhost:3000/api/docs/`
+
+## Daftar Endpoint Ringkas
+- **Auth:** `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`
+- **Profil:** `GET /me`, `PATCH /me`, `GET /me/jurnal`
+- **Peserta:** `GET /peserta`, `GET /peserta/{id}`, `PATCH /peserta/{id}`, `DELETE /peserta/{id}`
+- **Jurnal:** `GET /jurnal`, `POST /jurnal`, `GET /jurnal/{id}`, `PATCH /jurnal/{id}`, `PATCH /jurnal/{id}/review`, `DELETE /jurnal/{id}`
+- **Sistem:** `GET /health`, `GET /health/ready`
+
+## Cara Menjalankan Pengujian (Test)
+
+**1. Unit, DTO & HTTP Test (Cepat, Tanpa Database)**
+Pengujian ini menggunakan mock dan tidak memerlukan koneksi database. Sangat cepat dan menguji logika bisnis serta kontrak API.
 Perintah:
-
-bash
+```bash
 npm test
 Output Terminal:
 
 text
-> api-magang@1.0.0 test
-> jest
-
-Test Suites: 15 passed, 15 total
-Tests:       180 passed, 180 total
+Test Suites: 17 passed, 17 total
+Tests:       183 passed, 183 total
 Snapshots:   0 total
-Time:        13.509 s
+Time:        15.369 s
 Ran all test suites.
-**3. Test Coverage (Melihat Persentase Kode yang Teruji)**
-Pengujian ini dijalankan untuk melihat seberapa besar kode yang sudah tercakup oleh test, sekaligus memastikan angka tersebut lolos dari batas minimal (threshold) yang ditetapkan sebesar 60%.
+2. Test Coverage
+Menjalankan test sekaligus melihat persentase baris kode yang sudah tercakup. Proyek ini menargetkan threshold minimal 60%.
 Perintah:
 
 bash
@@ -430,80 +55,65 @@ npm run test:coverage
 Output Terminal:
 
 text
-> api-magang@1.0.0 test:coverage
-> jest --coverage
-
-Test Suites: 15 passed, 15 total
-Tests:       180 passed, 180 total
-Snapshots:   0 total
-Time:        19.796 s
-Ran all test suites.
-All files        80.66 |    68.05 |   65.69 |   81.26 |  
-
-**4. Integration Test (Membutuhkan Database Asli)**
-Pengujian ini memastikan alur aplikasi berjalan dengan baik saat terhubung langsung ke database PostgreSQL. Test ini akan menghapus dan membuat ulang skema database dari nol menggunakan migration.
-Langkah pertama, pastikan service PostgreSQL menyala dan buat database khusus test (jika belum ada):
-
-bash
-psql -U postgres -c "CREATE DATABASE magang_test;"
-Langkah kedua, jalankan perintah test integrasi:
+Test Suites: 17 passed, 17 total
+Tests:       183 passed, 183 total
+All files        80.66 |    68.05 |   65.69 |   81.26 |
+3. Integration Test (Membutuhkan Database Asli)
+Pengujian ini akan menyambung ke database PostgreSQL magang_test, menghapus data lama, dan menjalankan migrasi dari nol untuk menguji alur aplikasi secara nyata.
+Perintah:
 
 bash
 npm run test:int
 Output Terminal:
 
 text
-> api-magang@1.0.0 test:int
-> jest --config jest.integration.config.ts --runInBand
-
-PASS  tests/integration/auth-flow.test.ts
-  Alur autentikasi lengkap (database sungguhan)
-    √ register, login, akses /me, tolak mass assignment, refresh, logout, refresh ditolak (330 ms)
-    √ menolak email duplikat walau beda huruf besar dan spasi (409) (137 ms)
-    √ dua register bersamaan dengan email sama: satu 201, satu 409 (UNIQUE constraint) (196 ms)
-
-PASS  tests/integration/peserta-jurnal.test.ts
-  Alur peserta & jurnal (database sungguhan)
-    √ GET /peserta dengan 15 data: pagination dan filter bekerja
-    √ DELETE /peserta/:id yang masih punya jurnal — perilaku ON DELETE
-
 Test Suites: 2 passed, 2 total
 Tests:       5 passed, 5 total
 Snapshots:   0 total
 Time:        5.157 s
 Ran all test suites.
+Keputusan Desain & Arsitektur
+Perbedaan Entity dan DTO
+Entity adalah bentuk tabel di database (memuat semua field, termasuk password). DTO adalah bentuk data yang diizinkan masuk/keluar dari API (hanya field relevan). Entity tidak boleh dipakai langsung sebagai DTO untuk mencegah mass assignment, kebocoran password, dan menjaga kontrak API saat database berubah.
 
-## Konsep OpenAPI dan Swagger (Minggu 16 - Senin)
+Kenapa DELETE Harus Idempotent
+DELETE harus idempotent karena kalau kita menghapus data yang sama berkali-kali, hasilnya tetap sama (data terhapus). Ini membuat sistem lebih terprediksi dan client bisa mencoba ulang tanpa khawatir efek ganda.
 
-OpenAPI adalah **spesifikasi** atau standar format (berupa JSON/YAML) untuk mendeskripsikan bentuk REST API. Sedangkan Swagger adalah **kumpulan alat** (tools) yang menggunakan standar OpenAPI tersebut, salah satunya adalah Swagger UI yang mengubah dokumen menjadi halaman web interaktif yang bisa dicoba langsung.
+Kenapa Tidak Boleh Menghapus Lewat GET
+GET harus bersifat "safe" (tidak mengubah data). Jika ada endpoint seperti GET /peserta/1/hapus, browser atau crawler bisa memanggilnya secara otomatis dan menghapus data tanpa sepengetahuan kita. Aksi modifikasi wajib pakai POST, PUT, PATCH, atau DELETE.
 
-Dokumen API tetap perlu dibuat meskipun kita sendiri yang menulis seluruh kodenya karena dokumentasi berfungsi sebagai **kontrak yang jelas** antara backend dan frontend. Frontend tidak perlu lagi menebak-nebak bentuk respons atau membuka kode backend untuk tahu cara memanggil API. Selain itu, dokumentasi yang baik memudahkan pengujian (QA) dan memastikan tidak ada kesalahan komunikasi saat fitur baru ditambahkan di masa depan.
+Perbedaan Express 5
+Proyek ini menggunakan Express 5. Beberapa perbedaan dari versi lama:
 
-## Terjemahan DTO ke OpenAPI (Minggu 16 - Selasa)
+req.query bersifat hanya-baca, hasil validasi disimpan di req.validated.
 
-Berikut adalah contoh sinkronisasi aturan dari DTO (class-validator) ke dalam skema dokumentasi OpenAPI:
-1. `@MinLength(10)` pada DTO kegiatan → `minLength: 10` pada CreateJurnalRequest.
-2. `@IsIn(["belum", "sudah"])` pada DTO statusReview → `enum: ["belum", "sudah"]` pada ReviewJurnalRequest.
-3. `@IsUrl()` pada DTO linkCommit → `type: "string", format: "uri"` pada Jurnal.## Terjemahan DTO ke OpenAPI (Minggu 16 - Selasa)
+req.body bernilai undefined jika tidak ada body (bukan objek kosong).
 
-Berikut adalah contoh sinkronisasi aturan dari DTO (class-validator) ke dalam skema dokumentasi OpenAPI:
-1. `@MinLength(10)` pada DTO kegiatan → `minLength: 10` pada CreateJurnalRequest.
-2. `@IsIn(["belum", "sudah"])` pada DTO statusReview → `enum: ["belum", "sudah"]` pada ReviewJurnalRequest.
-3. `@IsUrl()` pada DTO linkCommit → `type: "string", format: "uri"` pada Jurnal.
+Sintaks path regex seperti /:id(\d+) sudah tidak didukung.
 
-## Terjemahan DTO ke OpenAPI
+Refleksi Pengujian: Menguji Perilaku, Bukan Implementasi
+Test yang baik memeriksa apa yang terjadi (hasil, error, efek samping), bukan bagaimana caranya (method apa yang dipanggil). Contoh terlalu detail: expect(repo.findOne).toHaveBeenCalledWith(...). Versi sehat: expect(hasil).toEqual(peserta) dan expect(repo.save).not.toHaveBeenCalled().
 
-Berikut adalah sinkronisasi aturan validasi dari DTO (class-validator) ke dalam skema dokumentasi OpenAPI:
+Konsep OpenAPI dan Swagger
+OpenAPI adalah spesifikasi standar format (JSON/YAML) untuk mendeskripsikan REST API. Swagger adalah kumpulan alat (tools) yang menggunakan standar OpenAPI, salah satunya Swagger UI yang mengubah dokumen menjadi halaman web interaktif. Dokumentasi tetap perlu dibuat agar frontend/QA memiliki kontrak yang jelas tanpa harus membaca kode backend.
 
-| Decorator DTO (class-validator) | Keyword OpenAPI (Swagger) |
-|---|---|
-| `@IsString()` | `type: string` |
-| `@IsEmail()` | `type: string, format: email` |
-| `@MinLength(10)` | `minLength: 10` |
-| `@MaxLength(200)` | `maxLength: 200` |
-| `@Min(1)` / `@Max(5)` | `minimum: 1` / `maximum: 5` |
-| `@IsIn(["belum", "sudah"])` | `enum: ["belum", "sudah"]` |
-| `@IsUrl()` | `type: string, format: uri` |
-| `@IsBoolean()` | `type: boolean` |
-| `@IsOptional()` | Properti tidak dimasukkan ke array `required` |
-| `@ValidateNested()` | Menggunakan `$ref` ke schema lain |
+Terjemahan DTO ke OpenAPI
+IsString() menjadi type: string
+
+IsEmail() menjadi type: string, format: email
+
+MinLength(10) menjadi minLength: 10
+
+MaxLength(200) menjadi maxLength: 200
+
+Min(1) / Max(5) menjadi minimum: 1 / maximum: 5
+
+IsIn(["belum", "sudah"]) menjadi enum: ["belum", "sudah"]
+
+IsUrl() menjadi type: string, format: uri
+
+IsBoolean() menjadi type: boolean
+
+IsOptional() menjadi properti tidak dimasukkan ke array required
+
+ValidateNested() menjadi menggunakan $ref ke schema lain

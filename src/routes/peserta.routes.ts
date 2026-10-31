@@ -76,8 +76,22 @@ router.post("/", validasi(RegisterDto), pesertaController.buatPeserta);
  *       '404':
  *         $ref: '#/components/responses/NotFound'
  */
-
 router.get("/:id", validasi(IdParamDto, "params"), pesertaController.getPesertaById);
+
+/**
+ * @openapi
+ * /peserta/{id}/jurnal:
+ *   get:
+ *     tags: [Peserta]
+ *     summary: Ambil daftar jurnal milik peserta tertentu
+ *     parameters:
+ *       - $ref: '#/components/parameters/IdPath'
+ *     responses:
+ *       '200':
+ *         description: Daftar jurnal peserta
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.get("/:id/jurnal", validasi(IdParamDto, "params"), pesertaController.getJurnalPeserta);
 
 /**
@@ -106,7 +120,6 @@ router.get("/:id/jurnal", validasi(IdParamDto, "params"), pesertaController.getJ
  *       '422':
  *         $ref: '#/components/responses/ValidationError'
  */
-
 router.patch("/:id", authGuard, validasi(IdParamDto, "params"), validasi(UpdateProfilDto), pesertaController.patchPeserta);
 
 /**
@@ -127,7 +140,6 @@ router.patch("/:id", authGuard, validasi(IdParamDto, "params"), validasi(UpdateP
  *       '404':
  *         $ref: '#/components/responses/NotFound'
  */
-
 router.delete("/:id", authGuard, requireRole("mentor"), validasi(IdParamDto, "params"), pesertaController.hapusPeserta);
 
 export default router;

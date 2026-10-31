@@ -19,6 +19,9 @@ const config: Config = {
         "!src/scripts/**",
         "!src/**/*.d.ts",
     ],
+    transformIgnorePatterns: [
+        "node_modules/(?!(@apidevtools)/)"
+    ],
 };
 
 export default config;

@@ -67,8 +67,72 @@ router.get("/jurnal", jurnalController.getJurnalSaya);
  */
 router.post("/", authGuard, validasi(CreateJurnalDto), jurnalController.buatJurnal);
 
+/**
+ * @openapi
+ * /jurnal/{id}:
+ *   get:
+ *     tags: [Jurnal]
+ *     summary: Ambil detail jurnal berdasarkan ID
+ *     parameters:
+ *       - $ref: '#/components/parameters/IdPath'
+ *     responses:
+ *       '200':
+ *         description: Data jurnal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JurnalResponse'
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.get("/:id", authGuard, validasi(IdParamDto, "params"), jurnalController.getJurnalById);
+
+/**
+ * @openapi
+ * /jurnal/{id}:
+ *   patch:
+ *     tags: [Jurnal]
+ *     summary: Ubah data jurnal
+ *     parameters:
+ *       - $ref: '#/components/parameters/IdPath'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateJurnalRequest'
+ *     responses:
+ *       '200':
+ *         description: Jurnal berhasil diubah
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '403':
+ *         $ref: '#/components/responses/Forbidden'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.patch("/:id", authGuard, validasi(IdParamDto, "params"), validasi(UpdateJurnalDto), jurnalController.updateJurnal);
+
+/**
+ * @openapi
+ * /jurnal/{id}:
+ *   delete:
+ *     tags: [Jurnal]
+ *     summary: Hapus jurnal
+ *     parameters:
+ *       - $ref: '#/components/parameters/IdPath'
+ *     responses:
+ *       '204':
+ *         description: Jurnal berhasil dihapus
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '403':
+ *         $ref: '#/components/responses/Forbidden'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.delete("/:id", authGuard, validasi(IdParamDto, "params"), jurnalController.hapusJurnal);
 
 /**
