@@ -105,16 +105,18 @@ export const components = {
       },
     },
 
-    FieldError: {
+      FieldError: {
       type: "object",
+      required: ["field", "pesan"],
       properties: {
-        field: { type: "string", example: "email" },
-        pesan: { type: "string", example: "Format email tidak valid" },
+      field: { type: "string", example: "email" },
+      pesan: { type: "string", example: "Format email tidak valid" },
       },
     },
 
-    ErrorResponse: {
+        ErrorResponse: {
       type: "object",
+      required: ["sukses", "error"],
       properties: {
         sukses: { type: "boolean", example: false },
         error: {

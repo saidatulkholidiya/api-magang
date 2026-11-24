@@ -62,6 +62,7 @@ app.use(requestLogger);
 app.use("/api/v1", rateLimiter);
 
 // 3. RUTE APLIKASI
+/////app.get("/api/v1/uji-500", () => { throw new Error("Uji 500"); });
 app.use("/api/v1", healthRoutes);
 app.use("/api/v1", routes);
 
