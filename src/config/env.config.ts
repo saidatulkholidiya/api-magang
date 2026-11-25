@@ -32,6 +32,7 @@ export const config = {
         refreshSecret: wajibAda("JWT_REFRESH_SECRET"),
         expiresIn: opsional("JWT_EXPIRES_IN", "15m"),
         refreshExpiresIn: opsional("JWT_REFRESH_EXPIRES_IN", "7d"),
+        accessExpiresIn: opsional("JWT_ACCESS_EXPIRES_IN", "15m"),
     },
     cors: {
         origins: opsional("CORS_ORIGINS", "http://localhost:5173").split(","),
@@ -39,6 +40,10 @@ export const config = {
     docs: {
         enabled: opsional("DOCS_ENABLED", process.env.NODE_ENV === "production" ? "false" : "true") === "true",
     },
+    cookie: {
+        secure: opsional("COOKIE_SECURE", process.env.NODE_ENV === "production" ? "true" : "false") === "true",
+    },
+
 } as const;
 
 export const isDev = config.app.env === "development";

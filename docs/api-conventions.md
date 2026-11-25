@@ -132,3 +132,19 @@ Meta di response: page, limit, total, totalPages, hasNext, hasPrev
 - Body JSON rusak → **400 INVALID_JSON**.
 - Body terlalu besar → **413 PAYLOAD_TOO_LARGE**.
 - Properti asing ditolak → **422**.
+
+## Perubahan yang Mematahkan Klien: refresh token pindah ke cookie
+
+**Yang berubah**
+- `POST /auth/login` tidak lagi mengembalikan `refreshToken` di body. Token dikirim lewat `Set-Cookie` (`httpOnly`, `SameSite=Strict`, `path=/api/v1/auth`, berlaku 7 hari).
+- `POST /auth/refresh` dan `POST /auth/logout` tidak lagi menerima body. Keduanya membaca cookie.
+- `POST /auth/logout` sekarang membalas `204`, bukan `200`.
+- Environment baru: `JWT_ACCESS_EXPIRES_IN`, `COOKIE_SECURE`.
+
+**Kenapa**
+
+Refresh token yang disimpan di `localStorage` bisa dicuri lewat XSS dan berlaku selama 7 hari.
+
+**Penanganan kalau sudah ada klien produksi**
+
+Rilis sebagai `/api/v2`, atau jalankan masa transisi (v1 menerima kedua cara untuk beberapa waktu, dengan pemberitahuan penghentian), lalu beri tahu semua pengguna API. Di proyek ini belum ada klien produksi, jadi perubahan dilakukan langsung di v1.

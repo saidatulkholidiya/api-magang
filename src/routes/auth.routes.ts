@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import * as authController from "../controllers/auth.controller";
 import { validasi } from "../middlewares/validasi.middleware";
@@ -56,10 +57,11 @@ router.post("/register", validasi(RegisterDto), authController.register);
  * /auth/login:
  *   post:
  *     tags: [Auth]
- *     summary: Login dan dapatkan access token serta refresh token
+ *     summary: Login dan mendapatkan access token serta refresh token melalui HttpOnly Cookie
  *     description: |
  *       Pesan error SAMA untuk email yang tidak terdaftar maupun password yang salah.
  *       Dibatasi 10 percobaan per 15 menit per IP.
+ *       Refresh token disimpan dalam cookie HttpOnly, bukan di response body.
  *     security: []
  *     requestBody:
  *       required: true
@@ -76,6 +78,11 @@ router.post("/register", validasi(RegisterDto), authController.register);
  *     responses:
  *       '200':
  *         description: Login berhasil
+ *         headers:
+ *           Set-Cookie:
+ *             description: Refresh token (httpOnly, SameSite=Strict, path /api/v1/auth, 7 hari)
+ *             schema:
+ *               type: string
  *         content:
  *           application/json:
  *             schema:
@@ -92,26 +99,24 @@ router.post("/register", validasi(RegisterDto), authController.register);
  *         $ref: '#/components/responses/TooManyRequests'
  */
 router.post("/login", loginLimiter, validasi(LoginDto), authController.login);
+
 /**
  * @openapi
  * /auth/refresh:
  *   post:
  *     tags: [Auth]
- *     summary: Perbarui access token menggunakan refresh token
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RefreshRequest'
+ *     summary: Perbarui access token menggunakan refresh token dari HttpOnly Cookie
+ *     security:
+ *       - cookieAuth: []
  *     responses:
  *       '200':
  *         description: Access token berhasil diperbarui
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RefreshResponse'
  *       '401':
  *         $ref: '#/components/responses/Unauthorized'
- *       '422':
- *         $ref: '#/components/responses/ValidationError'
  */
 router.post("/refresh", authController.refresh);
 
@@ -120,17 +125,14 @@ router.post("/refresh", authController.refresh);
  * /auth/logout:
  *   post:
  *     tags: [Auth]
- *     summary: Hapus refresh token (logout)
- *     security: []
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RefreshRequest'
+ *     summary: Hapus refresh token dan logout
+ *     security:
+ *       - cookieAuth: []
  *     responses:
- *       '200':
- *         description: Logout berhasil
+ *       '204':
+ *         description: Logout berhasil, cookie refresh token dihapus
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.post("/logout", authController.logout);
 

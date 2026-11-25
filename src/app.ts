@@ -10,7 +10,7 @@ import { errorHandler, notFoundHandler } from "./middlewares/error.middleware";
 import { config } from "./config/env.config";
 import { AppError } from "./utils/AppError";
 import { ErrorCode } from "./utils/errorCodes";
-
+import cookieParser from "cookie-parser";
 // Import Swagger
 import swaggerUi from "swagger-ui-express";
 import { spec } from "./docs/swagger";
@@ -57,7 +57,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
         next();
     });
 });
-
+app.use(cookieParser());
 app.use(requestLogger);
 app.use("/api/v1", rateLimiter);
 

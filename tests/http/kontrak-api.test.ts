@@ -44,6 +44,14 @@ describe("Autentikasi", () => {
     expect(res.status).toBe(401);
     expect(res.body.error.kode).toBe("TOKEN_EXPIRED");
   });
+
+  it("401 UNAUTHORIZED jika refresh tanpa cookie", async () => {
+  const res = await request(app).post("/api/v1/auth/refresh");
+
+  expect(res.status).toBe(401);
+  expect(res.body.sukses).toBe(false);
+  expect(res.body.error.kode).toBe("UNAUTHORIZED");
+});
 });
 
 describe("Otorisasi (role)", () => {
