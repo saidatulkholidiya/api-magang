@@ -40,6 +40,11 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "Tempel access token dari POST /auth/login (tanpa kata Bearer)."
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refreshToken"
       }
     },
     "parameters": {
@@ -162,18 +167,6 @@
           "telepon": {
             "type": "string",
             "pattern": "^(\\+62|62|0)8[1-9][0-9]{6,10}$"
-          }
-        }
-      },
-      "RefreshRequest": {
-        "type": "object",
-        "required": [
-          "refreshToken"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "refreshToken": {
-            "type": "string"
           }
         }
       },
@@ -436,18 +429,43 @@
             "type": "object",
             "required": [
               "accessToken",
-              "refreshToken",
               "peserta"
             ],
             "properties": {
               "accessToken": {
                 "type": "string"
               },
-              "refreshToken": {
-                "type": "string"
-              },
               "peserta": {
                 "$ref": "#/components/schemas/Peserta"
+              }
+            }
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "required": [
+          "sukses",
+          "pesan",
+          "data"
+        ],
+        "properties": {
+          "sukses": {
+            "type": "boolean",
+            "example": true
+          },
+          "pesan": {
+            "type": "string",
+            "example": "Berhasil"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "accessToken"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string"
               }
             }
           }
@@ -1564,8 +1582,8 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Login dan dapatkan access token serta refresh token",
-        "description": "Pesan error SAMA untuk email yang tidak terdaftar maupun password yang salah.\nDibatasi 10 percobaan per 15 menit per IP.\n",
+        "summary": "Login dan mendapatkan access token serta refresh token melalui HttpOnly Cookie",
+        "description": "Pesan error SAMA untuk email yang tidak terdaftar maupun password yang salah.\nDibatasi 10 percobaan per 15 menit per IP.\nRefresh token disimpan dalam cookie HttpOnly, bukan di response body.\n",
         "security": [],
         "requestBody": {
           "required": true,
@@ -1589,6 +1607,14 @@
         "responses": {
           "200": {
             "description": "Login berhasil",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Refresh token (httpOnly, SameSite=Strict, path /api/v1/auth, 7 hari)",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1621,27 +1647,25 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Perbarui access token menggunakan refresh token",
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
+        "summary": "Perbarui access token menggunakan refresh token dari HttpOnly Cookie",
+        "security": [
+          {
+            "cookieAuth": []
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Access token berhasil diperbarui"
+            "description": "Access token berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           }
         }
       }
@@ -1651,21 +1675,18 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Hapus refresh token (logout)",
-        "security": [],
-        "requestBody": {
-          "required": false,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
+        "summary": "Hapus refresh token dan logout",
+        "security": [
+          {
+            "cookieAuth": []
           }
-        },
+        ],
         "responses": {
-          "200": {
-            "description": "Logout berhasil"
+          "204": {
+            "description": "Logout berhasil, cookie refresh token dihapus"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }

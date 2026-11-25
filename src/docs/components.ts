@@ -1,3 +1,4 @@
+
 import { ErrorCode } from "../utils/errorCodes";
 import {
   bungkusDaftar,
@@ -15,6 +16,11 @@ export const components = {
       bearerFormat: "JWT",
       description:
         "Tempel access token dari POST /auth/login (tanpa kata Bearer).",
+    },
+    cookieAuth: {
+      type: "apiKey",
+      in: "cookie",
+      name: "refreshToken",
     },
   },
 
@@ -96,25 +102,16 @@ export const components = {
       },
     },
 
-    RefreshRequest: {
-      type: "object",
-      required: ["refreshToken"],
-      additionalProperties: false,
-      properties: {
-        refreshToken: { type: "string" },
-      },
-    },
-
-      FieldError: {
+    FieldError: {
       type: "object",
       required: ["field", "pesan"],
       properties: {
-      field: { type: "string", example: "email" },
-      pesan: { type: "string", example: "Format email tidak valid" },
+        field: { type: "string", example: "email" },
+        pesan: { type: "string", example: "Format email tidak valid" },
       },
     },
 
-        ErrorResponse: {
+    ErrorResponse: {
       type: "object",
       required: ["sukses", "error"],
       properties: {
@@ -231,11 +228,18 @@ export const components = {
 
     LoginResponse: bungkusSukses({
       type: "object",
-      required: ["accessToken", "refreshToken", "peserta"],
+      required: ["accessToken", "peserta"],
       properties: {
         accessToken: { type: "string" },
-        refreshToken: { type: "string" },
         peserta: ref("Peserta"),
+      },
+    }),
+
+    RefreshResponse: bungkusSukses({
+      type: "object",
+      required: ["accessToken"],
+      properties: {
+        accessToken: { type: "string" },
       },
     }),
 

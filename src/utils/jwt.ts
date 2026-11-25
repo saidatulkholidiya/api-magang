@@ -1,5 +1,6 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import { config } from "../config/env.config";
+
 
 export interface JwtPayload {
     id: number;
@@ -9,9 +10,9 @@ export interface JwtPayload {
 
 // Access Token — umur pendek (15 menit)
 export function buatAccessToken(payload: JwtPayload): string {
-    return jwt.sign(payload, config.jwt.secret, {
-        expiresIn: "15m",
-    } as jwt.SignOptions);
+  return jwt.sign(payload, config.jwt.secret, {
+    expiresIn: config.jwt.accessExpiresIn as SignOptions["expiresIn"],
+  });
 }
 
 export function verifikasiAccessToken(token: string): JwtPayload {
